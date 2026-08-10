@@ -1,0 +1,96 @@
+EMS-Backend/
+│
+|
+├── EMS.sln
+│
+|
+├── EMS.Core/                    [Step 1 - Foundation]  => No network realted works. Only Bussiness realted Things(Entities) and Contracts(Interfaces).  (Foundation - सबसे स्वतंत्र)
+│   |
+│   ├── Common/ Layer-0
+│   │   ├── ApiResponse.cs
+│   │   └── PagedResult.cs
+│   |
+│   ├── Enums/  Layer-0            (RoleType, Gender) Database में "Admin" स्टोर करने की बजाय int (0,1) स्टोर करना Fast और Memory Efficient है। Code में if(user.Role == RoleType.Admin) लिखना आसान है, if(user.Role == 1) भूलने की गुंजाइश नहीं।
+│   |   ├── RoleType              { Employee = 0, Admin = 1, Manager = 2 }
+│   |   ├── 
+│   |   └──
+│   |
+│   |── Exceptions/  Layer-0             Only Client Errors (NotFoundException, ConflictExceptions, BadRequestException) C# में सबको throw new Exception("Not found") फेंकना Professional नहीं है। क्योंकि Middleware को पता नहीं चलता कि यह 404 है या 500। Service में आप throw new NotFoundException("Employee not found"); लिखोगे, और Controller में try-catch की ज़रूरत नहीं पड़ेगी!
+│   |   ├── NotFoundException.cs        404(Not Found) Resource (Data) ही मौजूद न हो, जब GetByIdAsync में null आए।
+│   |   ├── BadRequestException.cs      400 (Bad Request) जब DTO में [Required] Fail हो, या कोई Query Parameter गलत हो।
+│   |   ├── ConflictExceptions.cs       409 (Conflict) Resource मौजूद है, लेकिन Business Rule टूट रहा है, Duplicate Email, या कोई और State Conflict (जैसे Active Employee Delete करना)।
+│   |   |
+│   |   |  //  ----Use only on Coustom Logic----  //       क्योंकि 401 और 403 को आमतौर पर ASP.NET Core की Built-in [Authorize] Attribute हैंडल कर लेती है। हमें उनके लिए अलग से Exception Class बनाने की ज़रूरत नहीं पड़ती (जब तक कि बहुत ही कस्टम लॉजिक न हो)।
+│   |   |── UnauthorizedException.cs    401 (Unauthorized) जब User Login ही नहीं है (Token Missing/Expired)।
+│   |   └── ForbiddenException.cs       403 (Forbidden) जब User Login है, लेकिन उसके पास Access नहीं है (जैसे Employee Admin का Data Delete करना चाहे)।
+│   |
+│   |── Constants/  Layer-0             JWT Token में हम "email", "role", "uid" जैसे Strings बार-बार लिखते हैं। अगर कहीं "emial" (Typo) हो गया, तो Token काम नहीं करेगा। इसे एक जगह Lock कर दो।
+│   |   ├── JwtClaimConstaints
+│   |   ├── 
+│   |   └── 
+│   |
+|   ├── Entities/   Layer-1      C# repersentations(Models) of DB tables, just to know that here is class related to Employee , not in Controller. (BaseEntity, Employee, Department…)
+│   │   ├── BaseEntity.cs        Employee, User, Department - हर Entity में Id, CreatedAt, IsActive, etc Common Properties रिपीट होता है। just change in BaseEntity.cs but not in all Class in future. just for Inheritance
+│   │   ├── User.cs              Login/Credentials (पासवर्ड, Role) वाली Table. Authentication (प्रमाणीकरण) के लिए। Admin और Employee दोनों यहाँ Login करेंगे।
+│   │   ├── Employee.cs          मुख्य HR (Human Resource) Table, मुख्य डेटा (Core Data)। इसमें Employee का नाम, सैलरी, Department रहेगा।
+|   |   |       ये User और Employee अलग-अलग Table क्यों हैं? एक ही Table क्यों नहीं?
+|   |   |       Effect (अगर एक Table बनाते): PasswordHash और Salary एक ही Row में होते। अगर किसी को सिर्फ Employee List (Salary) देखनी है, तो भी उसे PasswordHash वाला Column पढ़ना पड़ता (Security Risk). दो Tables में अलग करने से Security और Performance (ज़रूरत पड़ने पर ही JOIN) बेहतर होती है।
+|   |   |
+│   │   └── RefreshToken.cs      
+|   |
+│   ├── DTOs/  Layer-2                  सरल भाषा: DTO एक "खाली डिब्बा (Empty Box)" है। इसमें सिर्फ Properties (गुण) होते हैं, कोई Logic (तर्क) नहीं होता (कोई Method नहीं, कोई Calculate नहीं)।          Technical Definition: यह एक Plain C# Class (POCO) है, जिसका एकमात्र काम एक Layer से दूसरी Layer तक Data को ले जाना (Transfer) है।
+│   │   ├── EmployeeCreateDto.cs        जब Client (Frontend) कोई नया Employee Add (POST) करना चाहता है, तो वह इस डिब्बे में Data भरकर भेजता है।        Client को हमारी Database का CreatedAt, IsActive जैसे Internal (अंदरूनी) फील्ड्स नहीं दिखाने चाहिए। सिर्फ वही भेजो जो Client को भरना है।
+│   │   ├── EmployeeResponseDto.cs      जब Server (Backend) Client को Employee का Data वापस (Response) भेजता है, तो यह डिब्बा Use होता है।       Client को हमारी Database की हर Property (जैसे PasswordHash, RowVersion) नहीं दिखानी चाहिए। हम सिर्फ वही दिखाते हैं जो UI को चाहिए।
+│   │   ├── EmployeeQueryParams.cs      जब Client को "सिर्फ IT Department वाले, Active Employees, जिनके नाम में 'Raj' आता है" ढूंढने हों, तो वह इन Parameters को URL में भेजता है।      अगर 10,000 Employees हैं, तो एक साथ सारे नहीं भेज सकते। यह डिब्बा Client को यह बताने देता है कि "मुझे सिर्फ यही चाहिए"।
+│   │   ├── LoginDto.cs                 जब User अपना Email और Password डालकर Login बटन दबाता है, तो यह डेटा Server तक आता है।     Login में सिर्फ इन 2 चीज़ों की जरूरत होती है। हमें FirstName या Department नहीं चाहिए।
+│   │   ├── RegisterDto.cs              जब कोई नया User आपके सिस्टम में Account बनाना (Sign-Up) चाहता है।       Login से थोड़ा अलग है; इसमें Password को दो बार चेक करना पड़ता है (Password और ConfirmPassword Match करने चाहिए)।
+│   │   ├── TokenResponseDto.cs         
+│   │   ├── RefreshRequestDto.cs         
+│   │   └── RevokeRequestDto.cs         
+│   │    
+|   |
+|   |
+│   └── Interfaces/ Layer-3             Ye ek Contract/Promise hai jismein ye batata hia ki main ye kaam(Method) kar loonga sakta hu, lekin ye nhi batata ki main ye kaam kaise karunga. 
+│       ├── IEmployeeRepository.cs      Employee Table (Database) से जुड़ने का Contract।     Controller/Service को यह नहीं पता होना चाहिए कि Database में SQL Query कैसे लिखी जाती है।     EMS.Infrastructure/Repositories/EmployeeRepository.cs mein ye impliment hoga, हाँ असली SQL Code लिखा होगा।     GetByIdAsync, AddAsync, UpdateAsync, DeleteAsync, GetPagedAsync (पेजिनेशन वाला) जैसे Methods यहाँ डाले जाते हैं।
+│       ├── IUserRepository.cs          User Table (Database) से जुड़ने का Contract।     Employee और User अलग-अलग Tables हैं, इसलिए इनके काम अलग-अलग हैं (जैसे Login के लिए GetByEmailAsync)।       EMS.Infrastructure/Repositories/UserRepository.cs mein ye impliment hoga।       GetByEmailAsync, CreateAsync (Register), UpdatePasswordAsync जैसे Methods।
+│       ├── IEmployeeService.cs         Employee से जुड़े सारे Business Rules (व्यावसायिक नियम) का Contract।        Controller (API) को Direct Database Query नहीं पता होनी चाहिए। Controller बस कहेगा "Employee Add करो", Service जाकर चेक करेगा कि "क्या Duplicate Email तो नहीं?", "क्या Age 18+ है?", और फिर Repository को Call करेगा।      EMS.Services/Services/EmployeeService.cs mein ye impliment hoga।        AddEmployeeAsync(EmployeeCreateDto dto), GetEmployeesAsync(EmployeeQueryParams params), UpdateEmployeeAsync(int id, dto)। (ध्यान दें: Service DTO लेता है, सीधा Entity नहीं)।
+│       └── IAuthService.cs             Authentication (लॉगिन/रजिस्टर) और Token Generation (JWT) का Contract।        Login और Register की Logic अलग होती है। इसमें Password Hashing, JWT Token बनाना, Refresh Token हैंडल करना शामिल है।       EMS.Services/Services/AuthService.cs mein ye impliment hoga।        LoginAsync(LoginDto dto), RegisterAsync(RegisterDto dto), GenerateTokenAsync(User user)।
+|   
+|
+├── EMS.Infrastructure/           [Step 2 - Data Access]  (Data Access & बाहरी सेवाएँ)
+|   |
+│   ├── Data/                     (AppDbContext : DbContext)
+│   │   └── AppDbContext.cs       AppDbContext आपके "Database (डेटाबेस) का प्रतिनिधि (Representative)" है।        यह EF Core की वह Class है जो Database Connection (कनेक्शन) को Handle करती है। यह आपको बताती है कि किस Server (SQL Server) से Connect करना है, और कौन-सी Tables मौजूद हैं।
+|   |
+│   |── Repositories/              => Repositories वह जगह है जहाँ हम डेटाबेस से बात करने का सारा कोड लिखते हैं।  (EmployeeRepository : IEmployeeRepository)
+│   |   ├── EmployeeRepository.cs
+│   |   └── UserRepository.cs
+|   |
+│   └── Migrations/                (EF Core Migrations)
+│       ├── 
+│       ├── 
+│       └──
+|
+|
+├── EMS.Services/                 [Step 3 - Business Logic]
+|   |
+│   ├── Mappings/
+│   │   └── AutoMapperProfile.cs
+|   |
+│   ├── EmployeeService.cs
+|   |
+│   └── AuthService.cs
+│
+|
+|── EMS.API/                      [Step 4 - Presentation (Gate)] (Service folder ko API folder k andar bhi rakh sakte hai)
+|   |
+|   ├── Middleware/               (ExceptionHandlingMiddleware - optional)
+|   │   └── GlobalExceptionMiddleware.cs
+|   |
+|   ├── Controllers/              (EmployeesController)
+|   │   ├── EmployeesController.cs
+|   │   └── AuthController.cs                
+|   |
+|   ├── appsettings.json
+|   |
+|   └── Program.cs                (Middleware pipeline, DI setup)

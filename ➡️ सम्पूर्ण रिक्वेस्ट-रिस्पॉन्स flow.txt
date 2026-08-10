@@ -1,0 +1,61 @@
+➡️ सम्पूर्ण रिक्वेस्ट-रिस्पॉन्स फ़्लो (The Complete Journey)
+इसे एक कहानी की तरह समझिए और अपने फ़्लोचार्ट में उतारिए:
+
+
+==>  पहला भाग: अनुरोध का आना (Request Journey)
+
+1. क्लाइंट (Postman/Browser): एक HTTP Request भेजता है (जैसे, POST /api/employees)।
+
+2. Kestrel Web Server: रिक्वेस्ट को पकड़ता है और HttpContext ऑब्जेक्ट बनाता है।
+
+3. मिडलवेयर पाइपलाइन (Program.cs): HttpContext, मिडलवेयर की श्रृंखला से गुज़रता है। जैसे, ExceptionHandler, CORS, Authentication, Authorization।
+
+4. रूटिंग मिडलवेयर: URL और HTTP Method के आधार पर सही Controller और Action Method का चुनाव करता है। हमारे लिए: EmployeesController.Create()।
+
+5. मॉडल बाइंडिंग: एक्शन पैरामीटर [FromBody] CreateEmployeeDto dto देखकर, JSON बॉडी को पार्स करता है और एक DTO ऑब्जेक्ट बनाता है। अगर JSON का फ़ॉर्मैट गलत हुआ तो यहीं 400 Bad Request भेज देगा।
+
+6. वैलिडेशन: DTO पर लगी डेटा एनोटेशन (जैसे [Required], [EmailAddress]) चेक करता है। फ़ेल होने पर 400 Bad Request।
+
+7. कंट्रोलर (EmployeesController.Create): यहाँ सिर्फ़ समन्वय का काम होता है। यह IEmployeeService (जो DI से मिला है) के CreateAsync मेथड को बुलाता है।
+
+8. सर्विस लेयर (EmployeeService.CreateAsync): यह सबसे व्यस्त परत है। यहाँ बिज़नेस लॉजिक है:
+
+   a. यह _repository.IsEmailUniqueAsync(dto.Email) बुलाकर चेक करती है। (यहाँ _repository का मतलब IEmployeeRepository इंटरफ़ेस से है, असली रिपॉज़िटरी से नहीं)।
+
+   b. अगर ईमेल डुप्लीकेट है, तो throw new BadRequestException("Email exists") करती है।
+
+   c. DTO को Entity में मैप करती है।
+
+   d. फिर _repository.AddAsync(employee) बुलाती है।
+
+   e. काम हो जाने पर, Entity को फिर से Response DTO में मैप करती है।
+
+9. रिपॉज़िटरी लेयर (EmployeeRepository.AddAsync): यह एकमात्र जगह है जो AppDbContext (EF Core) से सीधी बात करती है। इसमें _context.Employees.AddAsync(employee) और _context.SaveChangesAsync() लिखा होता है। यही SQL जनरेट करके डेटाबेस में डेटा सेव करता है।
+
+10. डेटाबेस (SQL Server): डेटा सेव करता है और Employee.Id जनरेट करके वापस भेजता है।
+
+==>  दूसरा भाग: उत्तर का लौटना (Response Journey)
+	अब यही फ़्लो उल्टा चलता है:
+
+11. रिपॉज़िटरी → सर्विस: AddAsync का काम पूरा हुआ।
+
+12. सर्विस → कंट्रोलर: सर्विस, नया बना EmployeeDto ऑब्जेक्ट कंट्रोलर को लौटाती है।
+
+13. कंट्रोलर → रिस्पॉन्स: कंट्रोलर, उस EmployeeDto को ApiResponse<T>.Success() में लपेटता है और CreatedAtAction() मेथड से 201 स्टेटस कोड के साथ लौटाता है।
+
+14. JSON सीरियलाइज़ेशन: ASP.NET Core, ApiResponse ऑब्जेक्ट को JSON स्ट्रिंग में बदलता है।
+
+15. मिडलवेयर पाइपलाइन (वापसी): रिस्पॉन्स अब फिर से मिडलवेयर पाइपलाइन से होकर गुज़रता है, लेकिन इस बार बाहर की तरफ़।
+
+16. Kestrel → क्लाइंट: Kestrel, क्लाइंट को JSON रिस्पॉन्स (201 Created) भेजता है।
+
+==> एरर फ़्लो (The Exception Flow)
+	a. अगर सर्विस में throw new NotFoundException("...") हुआ।
+
+	b. यह अपवाद ऊपर की ओर जाता है – सर्विस से होते हुए कंट्रोलर तक। लेकिन कंट्रोलर इसे पकड़ता नहीं।
+
+	c. एक्सेप्शन हैंडलिंग मिडलवेयर (GlobalExceptionMiddleware) इसे पकड़ लेता है।
+
+	d. यह NotFoundException की पहचान करके 404 स्टेटस कोड सेट करता है।
+
+	e. और एक स्टैंडर्ड ApiResponse.Failure("Not found") JSON बनाकर सीधे क्लाइंट को भेज देता है। इसका मतलब है कि एरर की स्थिति में फ़्लो, पाइपलाइन में ही कट जाता है।

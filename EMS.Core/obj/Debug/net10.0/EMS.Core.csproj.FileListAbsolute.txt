@@ -1,0 +1,11 @@
+I:\EMS\EMS.Core\bin\Debug\net10.0\EMS.Core.deps.json
+I:\EMS\EMS.Core\bin\Debug\net10.0\EMS.Core.dll
+I:\EMS\EMS.Core\bin\Debug\net10.0\EMS.Core.pdb
+I:\EMS\EMS.Core\obj\Debug\net10.0\EMS.Core.GeneratedMSBuildEditorConfig.editorconfig
+I:\EMS\EMS.Core\obj\Debug\net10.0\EMS.Core.AssemblyInfoInputs.cache
+I:\EMS\EMS.Core\obj\Debug\net10.0\EMS.Core.AssemblyInfo.cs
+I:\EMS\EMS.Core\obj\Debug\net10.0\EMS.Core.csproj.CoreCompileInputs.cache
+I:\EMS\EMS.Core\obj\Debug\net10.0\EMS.Core.dll
+I:\EMS\EMS.Core\obj\Debug\net10.0\refint\EMS.Core.dll
+I:\EMS\EMS.Core\obj\Debug\net10.0\EMS.Core.pdb
+I:\EMS\EMS.Core\obj\Debug\net10.0\ref\EMS.Core.dll
