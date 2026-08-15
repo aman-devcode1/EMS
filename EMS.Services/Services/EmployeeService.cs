@@ -1,5 +1,3 @@
-
-
 using System.Data.Common;
 using AutoMapper;
 using EMS.Core.Common;
@@ -136,7 +134,7 @@ public class EmployeeService : IEmployeeService
     // ============================================================
     // 6. GET BY USER ID (Optional)
     // ============================================================
-    public async Task<EmployeeResponseDto?> GetByUserIdAsync(int userId)
+    public async Task<EmployeeResponseDto> GetByUserIdAsync(int userId)
     {
         var employee = await _employeeRepository.GetByIdAsync(userId);
 

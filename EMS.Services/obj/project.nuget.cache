@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "IZVQSiQD/mc=",
+  "dgSpecHash": "6sItdZaaUxU=",
   "success": true,
   "projectFilePath": "I:\\EMS\\EMS.Services\\EMS.Services.csproj",
   "expectedPackageFiles": [
@@ -44,18 +44,5 @@
     "C:\\Users\\ACER\\.nuget\\packages\\system.security.cryptography.pkcs\\9.0.4\\system.security.cryptography.pkcs.9.0.4.nupkg.sha512",
     "C:\\Users\\ACER\\.nuget\\packages\\system.security.cryptography.protecteddata\\9.0.4\\system.security.cryptography.protecteddata.9.0.4.nupkg.sha512"
   ],
-  "logs": [
-    {
-      "code": "NU1608",
-      "level": "Warning",
-      "message": "Detected package version outside of dependency constraint: AutoMapper.Extensions.Microsoft.DependencyInjection 12.0.1 requires AutoMapper (= 12.0.1) but version AutoMapper 16.2.0 was resolved.",
-      "projectPath": "I:\\EMS\\EMS.Services\\EMS.Services.csproj",
-      "warningLevel": 1,
-      "filePath": "I:\\EMS\\EMS.Services\\EMS.Services.csproj",
-      "libraryId": "AutoMapper",
-      "targetGraphs": [
-        "net10.0"
-      ]
-    }
-  ]
+  "logs": []
 }

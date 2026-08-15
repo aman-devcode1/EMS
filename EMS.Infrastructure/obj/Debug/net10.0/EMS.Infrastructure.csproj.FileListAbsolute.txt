@@ -9,6 +9,7 @@ I:\EMS\EMS.Infrastructure\obj\Debug\net10.0\EMS.Infrastructure.GeneratedMSBuildE
 I:\EMS\EMS.Infrastructure\obj\Debug\net10.0\EMS.Infrastructure.AssemblyInfoInputs.cache
 I:\EMS\EMS.Infrastructure\obj\Debug\net10.0\EMS.Infrastructure.AssemblyInfo.cs
 I:\EMS\EMS.Infrastructure\obj\Debug\net10.0\EMS.Infrastructure.csproj.CoreCompileInputs.cache
+I:\EMS\EMS.Infrastructure\obj\Debug\net10.0\EMS.Infrastructure.sourcelink.json
 I:\EMS\EMS.Infrastructure\obj\Debug\net10.0\EMS.Infr.CB012292.Up2Date
 I:\EMS\EMS.Infrastructure\obj\Debug\net10.0\EMS.Infrastructure.dll
 I:\EMS\EMS.Infrastructure\obj\Debug\net10.0\refint\EMS.Infrastructure.dll

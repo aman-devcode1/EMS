@@ -10,6 +10,7 @@ I:\EMS\EMS.Services\obj\Debug\net10.0\EMS.Services.GeneratedMSBuildEditorConfig.
 I:\EMS\EMS.Services\obj\Debug\net10.0\EMS.Services.AssemblyInfoInputs.cache
 I:\EMS\EMS.Services\obj\Debug\net10.0\EMS.Services.AssemblyInfo.cs
 I:\EMS\EMS.Services\obj\Debug\net10.0\EMS.Services.csproj.CoreCompileInputs.cache
+I:\EMS\EMS.Services\obj\Debug\net10.0\EMS.Services.sourcelink.json
 I:\EMS\EMS.Services\obj\Debug\net10.0\EMS.Serv.0CB5327C.Up2Date
 I:\EMS\EMS.Services\obj\Debug\net10.0\EMS.Services.dll
 I:\EMS\EMS.Services\obj\Debug\net10.0\refint\EMS.Services.dll

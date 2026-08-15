@@ -5,6 +5,7 @@ I:\EMS\EMS.Core\obj\Debug\net10.0\EMS.Core.GeneratedMSBuildEditorConfig.editorco
 I:\EMS\EMS.Core\obj\Debug\net10.0\EMS.Core.AssemblyInfoInputs.cache
 I:\EMS\EMS.Core\obj\Debug\net10.0\EMS.Core.AssemblyInfo.cs
 I:\EMS\EMS.Core\obj\Debug\net10.0\EMS.Core.csproj.CoreCompileInputs.cache
+I:\EMS\EMS.Core\obj\Debug\net10.0\EMS.Core.sourcelink.json
 I:\EMS\EMS.Core\obj\Debug\net10.0\EMS.Core.dll
 I:\EMS\EMS.Core\obj\Debug\net10.0\refint\EMS.Core.dll
 I:\EMS\EMS.Core\obj\Debug\net10.0\EMS.Core.pdb
