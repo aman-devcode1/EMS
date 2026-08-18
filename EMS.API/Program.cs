@@ -87,7 +87,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
-        c.swaggerEndpoint("/swagger/v1/swagger.json", "EMS API V1");
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "EMS API V1");
     });
 
     app.MapOpenApi();
