@@ -82,16 +82,21 @@ var app = builder.Build();
 app.UseMiddleware<GlobalExceptionMiddleware>(); // Custom Exception Handling Middleware को Use करें
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
+// if (app.Environment.IsDevelopment())
+// {
+//     app.UseSwagger();
+//     app.UseSwaggerUI();
+
+//     app.MapOpenApi();
+// }
+
+app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "EMS API V1");
     });
 
-    app.MapOpenApi();
-}
+app.MapOpenApi();
 
 app.UseHttpsRedirection();
 app.UseAuthentication();  // 👈 Authentication को Use करें
