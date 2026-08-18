@@ -3,7 +3,7 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 # Copy the solution and project files
-COPY EMS.sln .
+COPY EMS.slnx ./EMS.sln
 COPY EMS.Core/*.csproj ./EMS.Core/
 COPY EMS.Infrastructure/*.csproj ./EMS.Infrastructure/
 COPY EMS.Services/*.csproj ./EMS.Services/
