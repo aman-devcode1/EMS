@@ -85,7 +85,10 @@ app.UseMiddleware<GlobalExceptionMiddleware>(); // Custom Exception Handling Mid
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c =>
+    {
+        c.swaggerEndpoint("/swagger/v1/swagger.json", "EMS API V1");
+    });
 
     app.MapOpenApi();
 }
