@@ -73,23 +73,17 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
-// Swagger/OpenAPI (अगर चाहें तो)
+// SWAGGER (हमेशा चालू - Development के लिए)
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// APP PIPELINE
 var app = builder.Build();
 
+// Global Exception Middleware
 app.UseMiddleware<GlobalExceptionMiddleware>(); // Custom Exception Handling Middleware को Use करें
 
-// Configure the HTTP request pipeline.
-// if (app.Environment.IsDevelopment())
-// {
-//     app.UseSwagger();
-//     app.UseSwaggerUI();
-
-//     app.MapOpenApi();
-// }
-
+// Swagger - हमेशा चालू (Development के लिए)
 app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
@@ -99,9 +93,9 @@ app.UseSwagger();
 app.MapOpenApi();
 
 app.UseHttpsRedirection();
-app.UseAuthentication();  // 👈 Authentication को Use करें
+app.UseAuthentication();  // Authentication को Use करें
 app.UseAuthorization();
-app.MapControllers();  // 👈 Controllers को Map करें
+app.MapControllers();  // Controllers को Map करें
 
 var summaries = new[]
 {
