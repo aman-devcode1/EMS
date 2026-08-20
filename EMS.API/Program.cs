@@ -5,55 +5,48 @@ using EMS.Infrastructure.Data;
 using EMS.Infrastructure.Repositories;
 using EMS.Services.Mapping;
 using EMS.Services.Services;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
-
-// Database Context को Register करें (Local vs Live के हिसाब से)
+// ============================================================
+// DATABASE CONTEXT (In-Memory vs SQL Server)
+// ============================================================
 var useInMemory = builder.Configuration.GetValue<bool>("UseInMemory");
 
 if (useInMemory)
 {
-    // Live Demo / Testing के लिए In-Memory Database
     builder.Services.AddDbContext<AppDbContext>(options =>
         options.UseInMemoryDatabase("EMSInMemoryDb"));
-    Console.WriteLine("Using In-Memory Database");
+    Console.WriteLine("🚀 Using In-Memory Database");
 }
 else
 {
-    // Local Development के लिए SQL Server
     builder.Services.AddDbContext<AppDbContext>(options =>
         options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-    Console.WriteLine("Using SQL Server Database");
+    Console.WriteLine("💾 Using SQL Server Database");
 }
 
-// Database Context (AppDbContext) को Register करें
-// builder.Services.AddDbContext<AppDbContext>(options =>
-//     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-// Controllers को Enable करें (API Endpoints के लिए)
+// ============================================================
+// SERVICES REGISTRATION
+// ============================================================
 builder.Services.AddControllers();
+builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
 
-// AutoMapper Register करें (यह Line पहले से होनी चाहिए)
-builder.Services.AddAutoMapper(typeof(AutoMapperProfile)); // ✅
-
-// Repositories और Services Register करें
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 
+// ============================================================
 // JWT AUTHENTICATION
+// ============================================================
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-var secretKey = Encoding.UTF8.GetBytes(jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT Secret Key is missing."));
+var secretKey = Encoding.UTF8.GetBytes(jwtSettings["SecretKey"] ?? 
+    throw new InvalidOperationException("JWT Secret Key is missing."));
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -70,37 +63,31 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-
 builder.Services.AddAuthorization();
 
-// SWAGGER (हमेशा चालू - Development के लिए)
+// ============================================================
+// SWAGGER (Production में भी चालू - Demo के लिए)
+// ============================================================
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// ============================================================
 // APP PIPELINE
+// ============================================================
 var app = builder.Build();
 
-// Global Exception Middleware
-app.UseMiddleware<GlobalExceptionMiddleware>(); // Custom Exception Handling Middleware को Use करें
+app.UseMiddleware<GlobalExceptionMiddleware>();
 
-// Swagger - हमेशा चालू (Development के लिए)
+// ✅ Swagger - Production में भी चालू (ताकि Live Demo चले)
 app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "EMS API V1");
-    });
-
-app.MapOpenApi();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "EMS API V1");
+});
 
 app.UseHttpsRedirection();
-app.UseAuthentication();  // Authentication को Use करें
+app.UseAuthentication();
 app.UseAuthorization();
-app.MapControllers();  // Controllers को Map करें
-
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+app.MapControllers();
 
 app.Run();
-
