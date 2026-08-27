@@ -43,7 +43,7 @@ public class Employee : BaseEntity
     [MaxLength(100, ErrorMessage = "Department cannot exceed 100 characters.")]
     public string Department { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Salary is required.")]
+    // [Required(ErrorMessage = "Salary is required.")]
     [Column(TypeName = "decimal(18,2)")] // SQL में सटीक Decimal
     public decimal? Salary { get; set; }
 

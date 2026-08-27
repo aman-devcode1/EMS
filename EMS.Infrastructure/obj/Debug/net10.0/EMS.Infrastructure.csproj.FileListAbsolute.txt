@@ -1,0 +1,6 @@
+I:\EMS\EMS.Infrastructure\obj\Debug\net10.0\EMS.Infrastructure.csproj.AssemblyReference.cache
+I:\EMS\EMS.Infrastructure\obj\Debug\net10.0\EMS.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
+I:\EMS\EMS.Infrastructure\obj\Debug\net10.0\EMS.Infrastructure.AssemblyInfoInputs.cache
+I:\EMS\EMS.Infrastructure\obj\Debug\net10.0\EMS.Infrastructure.AssemblyInfo.cs
+I:\EMS\EMS.Infrastructure\obj\Debug\net10.0\EMS.Infrastructure.csproj.CoreCompileInputs.cache
+I:\EMS\EMS.Infrastructure\obj\Debug\net10.0\EMS.Infrastructure.sourcelink.json

@@ -13,6 +13,7 @@ public class AppDbContext : DbContext
     public DbSet<Employee> Employees { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
+    public DbSet<OtpCode> OtpCodes { get; set; }  // OTP Codes के लिए नया DbSet
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -118,6 +119,25 @@ public class AppDbContext : DbContext
             // 🔥 Expiry और Revoke के लिए Index
             entity.HasIndex(rt => rt.ExpiresAt);
             entity.HasIndex(rt => rt.IsRevoked);
+        });
+
+        // ============================================================
+        // 4. OtpCode Configuration
+        // ============================================================
+        modelBuilder.Entity<OtpCode>(entity =>
+        {
+            entity.HasKey(o => o.Id);
+            entity.Property(o => o.Code).IsRequired().HasMaxLength(10);
+
+            // 🔥 Ek user ka sirf 1 hi active OTP row ho sakta hai
+            entity.HasIndex(o => o.UserId).IsUnique();
+
+            entity.HasOne(o => o.User)
+            .WithMany()
+            .HasForeignKey(o => o.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(o => o.ExpiresAt);
         });
     }
 }

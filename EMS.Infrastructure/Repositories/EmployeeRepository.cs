@@ -1,7 +1,7 @@
 using EMS.Core.Common;
 using EMS.Core.DTOs.Employee;
 using EMS.Core.Entities;
-using EMS.Core.Interfaces;
+using EMS.Core.Interfaces.IRepositories;
 using EMS.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -76,7 +76,7 @@ public class EmployeeRepository : IEmployeeRepository
             var term = queryParams.SearchTerm.ToLower();
 
             query = query.Where(e =>
-            (e.FirstName + "" + e.LastName).ToLower().Contains(term) ||
+            (e.FirstName + " " + e.LastName).ToLower().Contains(term) ||
             (e.Department != null && e.Department.ToLower().Contains(term)) ||
             (e.Email != null && e.Email.ToLower().Contains(term)) ||
             (e.Designation != null && e.Designation.ToLower().Contains(term)) ||

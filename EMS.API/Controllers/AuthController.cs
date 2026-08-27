@@ -32,7 +32,22 @@ public class AuthController : ControllerBase
             Data = result
         });
     }
-    
+
+    // ============================================================
+    // 1.1 VERIFY REGISTRATION OTP
+    // ============================================================
+    [HttpPost("verify-registration-otp")]
+    public async Task<IActionResult> VerifyRegistrationOtp([FromBody] VerifyOtpDto verifyOtpDto)
+    {
+        var result = await _authService.VerifyOtpAsync(verifyOtpDto);
+        return Ok(new ApiResponse<TokenResponseDto>
+        {
+            Success = true,
+            Message = "Email verification successful. You are now logged in.",
+            Data = result
+        });
+    }
+
     // ============================================================
     // 2. LOGIN ENDPOINT
     // ============================================================

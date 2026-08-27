@@ -19,7 +19,7 @@ public class AdminController : ControllerBase
     }
 
     // ============================================================
-    // 1. ADMIN REGISTER (सिर्फ एक बार - Secret API)
+    // 1. ADMIN REGISTER (सिर्फ एक बार - Secret API) - OTP Send
     // ============================================================
     [HttpPost("register")]
     [AllowAnonymous]
@@ -29,13 +29,13 @@ public class AdminController : ControllerBase
         return Ok(new ApiResponse<TokenResponseDto>
         {
             Success = true,
-            Message = "Admin registration successful. Please check your email for verification (if enabled).",
+            Message = "Admin registration successful. Please verify the OTP sent to your email address.",
             Data = result
         });
     }
 
     // ============================================================
-    // 2. ADMIN LOGIN
+    // 2. ADMIN / Manager LOGIN Step 1: Send OTP not Token
     // ============================================================
     [HttpPost("login")]
     [AllowAnonymous]
@@ -46,6 +46,22 @@ public class AdminController : ControllerBase
         {
             Success = true,
             Message = "Admin login successful",
+            Data = result
+        });
+    }
+
+    // ============================================================
+    // 3. VERIFY LOGIN OTP — Step 2 (Tokens milenge)
+    // ============================================================
+    [HttpPost("verify-login-otp")]
+    [AllowAnonymous]
+    public async Task<IActionResult> VerifyLoginOtp([FromBody] VerifyOtpDto verifyOtpDto)
+    {
+        var result = await _authService.VerifyAdminLoginOtpAsync(verifyOtpDto);
+        return Ok(new ApiResponse<TokenResponseDto>
+        {
+            Success = true,
+            Message = "Login successful.",
             Data = result
         });
     }

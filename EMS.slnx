@@ -1,6 +1,0 @@
-<Solution>
-  <Project Path="EMS.API/EMS.API.csproj" />
-  <Project Path="EMS.Core/EMS.Core.csproj" />
-  <Project Path="EMS.Infrastructure/EMS.Infrastructure.csproj" />
-  <Project Path="EMS.Services/EMS.Services.csproj" />
-</Solution>

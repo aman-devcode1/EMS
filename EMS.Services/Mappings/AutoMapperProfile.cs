@@ -57,7 +57,8 @@ public class AutoMapperProfile : Profile
             .ForMember(dest => dest.Department, opt => opt.Ignore())        // Register में नहीं है
             .ForMember(dest => dest.Designation, opt => opt.Ignore())       // Register में नहीं है
             .ForMember(dest => dest.Salary, opt => opt.Ignore())            // Register में नहीं है
-            .ForMember(dest => dest.HireDate, opt => opt.Ignore());         // Register में नहीं है
+            .ForMember(dest => dest.HireDate, opt => opt.Ignore())         // Register में नहीं है
+            .ForMember(dest => dest.Salary, opt => opt.Ignore());         // Register में नहीं है
 
     }
 }

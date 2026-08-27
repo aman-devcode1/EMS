@@ -148,4 +148,22 @@ public class EmployeesController : ControllerBase
             Data = result
         });
     }
+
+        // ============================================================
+    // 8. PROMOTE EMPLOYEE TO MANAGER (Admin only)
+    // ============================================================
+    [HttpPatch("{id}/promote-to-manager")]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> PromoteToManager(int id)
+    {
+        await _employeeService.PromoteToManagerAsync(id);
+
+        return Ok(new ApiResponse<object>
+        {
+            Success = true,
+            Message = "Employee promoted to Manager successfully.",
+            Data = null
+        });
+    }
 }

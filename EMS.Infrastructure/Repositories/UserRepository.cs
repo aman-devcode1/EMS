@@ -1,6 +1,6 @@
 using EMS.Core.Entities;
 using EMS.Core.Enums;
-using EMS.Core.Interfaces;
+using EMS.Core.Interfaces.IRepositories;
 using EMS.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 

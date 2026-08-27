@@ -5,6 +5,8 @@ using EMS.Core.DTOs.Employee;
 using EMS.Core.Entities;
 using EMS.Core.Exceptions;
 using EMS.Core.Interfaces;
+using EMS.Core.Interfaces.IRepositories;
+using EMS.Core.Interfaces.IServices;
 using EMS.Infrastructure.Data;
 
 namespace EMS.Services.Services;
@@ -123,11 +125,11 @@ public class EmployeeService : IEmployeeService
 
         return new PagedResult<EmployeeResponseDto>
         {
-          PageNumber = pageResult.PageNumber,
-          PageSize = pageResult.PageSize,
-          TotalRecords = pageResult.TotalRecords,  
-          TotalPages = pageResult.TotalPages,
-          Items = employeesDto  
+            PageNumber = pageResult.PageNumber,
+            PageSize = pageResult.PageSize,
+            TotalRecords = pageResult.TotalRecords,
+            TotalPages = pageResult.TotalPages,
+            Items = employeesDto
         };
     }
 
@@ -160,5 +162,24 @@ public class EmployeeService : IEmployeeService
         await _employeeRepository.UpdateAsync(employee);
 
         return _mapper.Map<EmployeeResponseDto>(employee);
+    }
+
+    // ============================================================
+    // 8. PROMOTE TO MANAGER (Admin action)
+    // ============================================================
+    public async Task<bool> PromoteToManagerAsync(int employeeId)
+    {
+        var employee = await _employeeRepository.GetByIdAsync(employeeId);
+
+        if (employee == null)
+            throw new NotFoundException($"Employee with Id {employeeId} not found.");
+
+        if (employee.User == null)
+            throw new BadRequestException("This employee does not have a linked login account and cannot be promoted.");
+
+        employee.User.Role = RoleType.Manager;
+        await _userRepository.UpdateAsync(employee.User);
+
+        return true;
     }
 }

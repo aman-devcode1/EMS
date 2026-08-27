@@ -23,6 +23,8 @@ public class User : BaseEntity
     // ============================================================
     // Enum से Role लेंगे। डिफॉल्ट "Employee" होगा।
     public RoleType Role { get; set; } = RoleType.Employee;
+        
+    public bool IsTwoFactorEnabled { get; set; } = false; // Employee अपनी Profile से Enable कर सकता है.
 
 // ============================================================
     // 3. FOREIGN KEYS (Relationships) - 🔥 ये Missing थे!

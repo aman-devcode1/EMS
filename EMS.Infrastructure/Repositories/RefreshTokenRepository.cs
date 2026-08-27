@@ -1,5 +1,5 @@
 using EMS.Core.Entities;
-using EMS.Core.Interfaces;
+using EMS.Core.Interfaces.IRepositories;
 using EMS.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,6 +20,13 @@ public class RefreshTokenRepository : IRefreshTokenRepository
         return await _context.RefreshTokens
             .Include(rt => rt.User)
             .FirstOrDefaultAsync(rt => rt.Token == token);
+    }
+
+    // 👇 NEW — unique-per-user constraint ki wajah se ye zaroori hai
+    public async Task<RefreshToken?> GetByUserIdAsync(int userId)
+    {
+        return await _context.RefreshTokens
+            .FirstOrDefaultAsync(rt => rt.UserId == userId);
     }
 
     public async Task CreateAsync(RefreshToken refreshToken)
