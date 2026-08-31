@@ -13,4 +13,5 @@ public interface IEmployeeService
     Task<bool> DeleteAsync(int id);
     Task<EmployeeResponseDto> ToggleActiveStatusAsync(int id);
     Task<EmployeeResponseDto> GetByUserIdAsync(int id);
+    Task<bool> PromoteToManagerAsync(int employeeId);
 }

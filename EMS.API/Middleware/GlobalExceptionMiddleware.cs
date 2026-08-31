@@ -40,6 +40,7 @@ public class GlobalExceptionMiddleware
             BadRequestException badRequest => ((int)HttpStatusCode.BadRequest, badRequest.Message),
             NotFoundException notFound => ((int)HttpStatusCode.NotFound, notFound.Message),
             ConflictException conflict => ((int)HttpStatusCode.Conflict, conflict.Message),
+            ExternalServiceException externalService => ((int)HttpStatusCode.ServiceUnavailable, externalService.Message),
 
             // 🔥 Unauthorized (401) — Optional
             UnauthorizedAccessException unauthorized => ((int)HttpStatusCode.Unauthorized, "You are not authorized."),

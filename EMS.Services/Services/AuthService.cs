@@ -9,8 +9,12 @@ using EMS.Core.Entities;
 using EMS.Core.Enums;
 using EMS.Core.Exceptions;
 using EMS.Core.Interfaces;
+using EMS.Core.Interfaces.IRepositories;
+using EMS.Core.Interfaces.IServices;
+using EMS.Core.Interfaces.ExternalServices;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using EMS.Core.Dtos.Auth;
 
 namespace EMS.Services.Services;
 
@@ -47,7 +51,10 @@ public class AuthService : IAuthService
     // ============================================================
     private async Task<OtpSentResponseDto> GenerateAndSendOtpAsync(int userId, string email, OtpPurpose purpose)
     {
-        var existingOtp = await _otpRepository.GetByUserIdAsync(userId);
+        // Expired otps clean with new otps requests.
+        await _otpRepository.DeleteExpiredOtpCodesAsync();
+
+        var existingOtp = await _otpRepository.GetOtpCodeByUserIdAsync(userId);
         string? oldCodeToShow = null;
 
         if (existingOtp != null)
@@ -58,7 +65,7 @@ public class AuthService : IAuthService
                 oldCodeToShow = existingOtp.Code;
             }
             // Chahe valid ho ya expired, purana record hatao (naya banayenge)
-            await _otpRepository.DeleteAsync(existingOtp.Id);
+            await _otpRepository.DeleteOtpCodeAsync(existingOtp.Id);
         }
 
         var newCode = GenerateOtpCode();
@@ -72,7 +79,7 @@ public class AuthService : IAuthService
             CreatedAt = DateTime.UtcNow
         };
 
-        await _otpRepository.AddAsync(otpEntity);
+        await _otpRepository.AddOtpCodeAsync(otpEntity);
         await _emailService.SendOtpEmailAsync(email, newCode, oldCodeToShow);
 
         return new OtpSentResponseDto
@@ -283,14 +290,14 @@ public class AuthService : IAuthService
         var user = await _userRepository.GetByEmailAsync(verifyOtpDto.Email)
             ?? throw new NotFoundException("User not found.");
 
-        var otp = await _otpRepository.GetByUserIdAsync(user.Id);
+        var otp = await _otpRepository.GetOtpCodeByUserIdAsync(user.Id);
         if (otp == null || otp.ExpiresAt < DateTime.UtcNow)
             throw new BadRequestException("OTP has expired. Please request a new one.");
 
         if (otp.Code != verifyOtpDto.Code)
             throw new BadRequestException("Invalid OTP code.");
 
-        await _otpRepository.DeleteAsync(otp.Id);
+        await _otpRepository.DeleteOtpCodeAsync(otp.Id);
 
         user.IsActive = true;
         await _userRepository.UpdateAsync(user);
@@ -312,16 +319,32 @@ public class AuthService : IAuthService
         var user = await _userRepository.GetByEmailAsync(verifyOtpDto.Email)
             ?? throw new UnauthorizedAccessException("Invalid credentials.");
 
-        var otp = await _otpRepository.GetByUserIdAsync(user.Id);
+        var otp = await _otpRepository.GetOtpCodeByUserIdAsync(user.Id);
         if (otp == null || otp.ExpiresAt < DateTime.UtcNow)
             throw new BadRequestException("OTP has expired. Please login again.");
 
         if (otp.Code != verifyOtpDto.Code)
+
             throw new BadRequestException("Invalid OTP code.");
 
-        await _otpRepository.DeleteAsync(otp.Id);
+        await _otpRepository.DeleteOtpCodeAsync(otp.Id);
 
         return await IssueTokensAsync(user);
+    }
+
+    // ============================================================
+    // 10. Resend Otp
+    // ============================================================
+    public async Task<OtpSentResponseDto> ResendOtpAsync(ResendOtpDto resendOtpDto)
+    {
+        var user = await _userRepository.GetByEmailAsync(resendOtpDto.Email)
+            ?? throw new NotFoundException("No pending registration found for this email.");
+
+        if (user.IsActive)
+            throw new ConflictException("This account is already verified. Please login instead.");
+
+        // 👇 User/Employee row ko touch nahi karta — sirf OTP resend
+        return await GenerateAndSendOtpAsync(user.Id, user.Email, OtpPurpose.Registration);
     }
 
     // ============================================================

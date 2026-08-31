@@ -35,4 +35,17 @@ public class OtpRepository : IOtpRepository
             await _context.SaveChangesAsync();
         }
     }
+
+    public async Task DeleteExpiredOtpCodesAsync()
+    {
+        var expiredOtps = await _context.OtpCodes
+            .Where(o => o.ExpiresAt <= DateTime.UtcNow)
+            .ToListAsync();
+
+        if (expiredOtps.Count > 0)
+        {
+            _context.OtpCodes.RemoveRange(expiredOtps);
+            await _context.SaveChangesAsync();
+        }
+    }
 }

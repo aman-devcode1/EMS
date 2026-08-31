@@ -3,6 +3,7 @@ using AutoMapper;
 using EMS.Core.Common;
 using EMS.Core.DTOs.Employee;
 using EMS.Core.Entities;
+using EMS.Core.Enums;
 using EMS.Core.Exceptions;
 using EMS.Core.Interfaces;
 using EMS.Core.Interfaces.IRepositories;
@@ -175,7 +176,10 @@ public class EmployeeService : IEmployeeService
             throw new NotFoundException($"Employee with Id {employeeId} not found.");
 
         if (employee.User == null)
-            throw new BadRequestException("This employee does not have a linked login account and cannot be promoted.");
+            throw new BadRequestException("This employee does not have a user account.");
+
+        if (employee.User.Role == RoleType.Manager)
+            throw new BadRequestException("This employee is already a Manager.");
 
         employee.User.Role = RoleType.Manager;
         await _userRepository.UpdateAsync(employee.User);

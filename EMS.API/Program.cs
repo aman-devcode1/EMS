@@ -1,16 +1,17 @@
 using System.Text;
 using EMS.API.Middleware;
-using EMS.Core.Interfaces;
 using EMS.Infrastructure.Data;
-using EMS.Infrastructure.Services;
 using EMS.Infrastructure.Repositories;
-using AutoMapper;
 using EMS.Services.Mapping;
 using EMS.Services.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.HttpOverrides;
+using EMS.Core.Interfaces.IRepositories;
+using EMS.Core.Interfaces.IServices;
+using EMS.Core.Interfaces.ExternalServices;
+using EMS.Infrastructure.ExternalServices;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -47,13 +48,22 @@ builder.Services.AddAutoMapper(cfg =>
     cfg.AddProfile<AutoMapperProfile>();
 });
 
+// REPOSITORIES
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddScoped<IOtpRepository, OtpRepository>();
-builder.Services.AddHttpClient<IEmailService, EmailService>();
+
+// SERVICES
+builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
+builder.Services.AddScoped<IOtpService, OtpService>();
+
+// HTTP CLIENT (Brevo/SendGrid के लिए)
+builder.Services.AddHttpClient<IEmailService, EmailService>();
+
+builder.Services.AddMemoryCache();
 
 // ============================================================
 // JWT AUTHENTICATION

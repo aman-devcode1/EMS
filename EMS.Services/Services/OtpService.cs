@@ -1,4 +1,5 @@
 using EMS.Core.Entities;
+using EMS.Core.Enums;
 using EMS.Core.Interfaces.ExternalServices;
 using EMS.Core.Interfaces.IRepositories;
 using EMS.Core.Interfaces.IServices;
@@ -19,54 +20,76 @@ public class OtpService : IOtpService
         _config = config;
     }
 
-    public async Task<bool> GenerateAndSendOtpAsync(string email)
+    // ============================================================
+    // 1. GENERATE AND SEND OTP (UserId + Purpose)
+    // ============================================================
+    public async Task<bool> GenerateAndSendOtpAsync(int userId, string email, OtpPurpose purpose)
     {
-         // 1. Generate 6-digit OTP
-        var otpCode = new Random().Next(100000, 999999).ToString();
-        var expiry = DateTime.UtcNow.AddMinutes(5);
+        // Fetch existing OTP
+        var existingOtp = await _otpRepo.GetOtpCodeByUserIdAsync(userId);
+        string? oldCodeToShow = null;
 
-        // 2. Create OTP Record
-        var otpRecord = new OtpRecord
+        if (existingOtp != null)
         {
-            Email = email,
-            OtpCode = otpCode,
-            OtpExpiryTime = expiry,
-            OtpIsUsed = false
+            if (existingOtp.ExpiresAt > DateTime.UtcNow)
+                oldCodeToShow = existingOtp.Code;
+            await _otpRepo.DeleteOtpCodeAsync(existingOtp.Id);
+        }
+
+        // Generate new OTP
+        var newCode = GenerateOtpCode();
+        var otpEntity = new OtpCode
+        {
+            UserId = userId,
+            Code = newCode,
+            Purpose = purpose,
+            ExpiresAt = DateTime.UtcNow.AddMinutes(5)
+            // CreatedAt auto-set from BaseEntity
         };
 
-        // 3. Save/Replace in DB (Upsert)
-        await _otpRepo.SaveOrUpdateOtpAsync(otpRecord);
+        await _otpRepo.AddOtpCodeAsync(otpEntity);
 
-        // 4. Send Email
-        var emailSent = await _emailService.SendOtpEmailAsync(email, otpCode);
+        // Send email
+        var emailSent = await _emailService.SendOtpEmailAsync(email, newCode, oldCodeToShow);
 
-        // 5. If email failed, delete the OTP from DB to avoid stale data
+        // Rollback if email fails
         if (!emailSent)
         {
-            await _otpRepo.DeleteOtpAsync(email);
+            await _otpRepo.DeleteOtpCodeAsync(otpEntity.Id);
             return false;
         }
 
         return true;
     }
 
-    public async Task<bool> VerifyAndDeleteOtpAsync(string email, string otpCode)
+    // ============================================================
+    // 2. VERIFY OTP (UserId + Code)
+    // ============================================================
+    public async Task<bool> VerifyOtpAsync(int userId, string otpCode)
     {
-        // 1. Get Valid OTP
-        var otpRecord = await _otpRepo.GetValidOtpAsync(email, otpCode);
+        var otp = await _otpRepo.GetOtpCodeByUserIdAsync(userId);
 
-        if (otpRecord == null)
-            return false; // Invalid or expired
+        if (otp == null || otp.ExpiresAt < DateTime.UtcNow || otp.Code != otpCode)
+            return false;
 
-        // 2. Delete OTP immediately (Secure)
-        await _otpRepo.DeleteOtpAsync(email);
-
+        await _otpRepo.DeleteOtpCodeAsync(otp.Id);
         return true;
     }
 
+    // ============================================================
+    // 3. RESEND OTP (delete old → generate new)
+    // ============================================================
+    public async Task<bool> ResendOtpAsync(int userId, string email, OtpPurpose purpose)
+    {
+        return await GenerateAndSendOtpAsync(userId, email, purpose);
+    }
+
+    // ============================================================
+    // PRIVATE HELPER
+    // ============================================================
     private string GenerateOtpCode()
     {
-        Random random = new Random();
-        return random.Next(100000, 999999).ToString(); // Generates a 6-digit OTP
+        var random = new Random();
+        return random.Next(100000, 999999).ToString();
     }
 }

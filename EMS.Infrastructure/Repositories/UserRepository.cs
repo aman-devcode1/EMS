@@ -80,6 +80,8 @@ public class UserRepository : IUserRepository
     // ============================================================
     public async Task<User?> GetAdminAsync()
     {
-        return await _context.Users.FirstOrDefaultAsync(u => u.Role == RoleType.Admin);
+        return await _context.Users
+            .Include(u => u.Employee)
+            .FirstOrDefaultAsync(u => u.Role == RoleType.Admin);
     }
 }

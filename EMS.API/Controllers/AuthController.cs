@@ -1,7 +1,9 @@
 using System.Security.Claims;
 using EMS.Core.Common;
+using EMS.Core.Dtos.Auth;
 using EMS.Core.DTOs.Auth;
 using EMS.Core.Interfaces;
+using EMS.Core.Interfaces.IServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -25,7 +27,7 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Register([FromBody] RegisterDto registerDto)
     {
         var result = await _authService.RegisterAsync(registerDto);
-        return Ok(new ApiResponse<TokenResponseDto>
+        return Ok(new ApiResponse<OtpSentResponseDto>
         {
             Success = true,
             Message = "Registration successful. Please check your email for verification (if enabled).",
@@ -39,7 +41,7 @@ public class AuthController : ControllerBase
     [HttpPost("verify-registration-otp")]
     public async Task<IActionResult> VerifyRegistrationOtp([FromBody] VerifyOtpDto verifyOtpDto)
     {
-        var result = await _authService.VerifyOtpAsync(verifyOtpDto);
+        var result = await _authService.VerifyRegistrationOtpAsync(verifyOtpDto);
         return Ok(new ApiResponse<TokenResponseDto>
         {
             Success = true,
@@ -138,6 +140,22 @@ public class AuthController : ControllerBase
         {
             Success = true,
             Message = "All sessions revoked successfully. You have been logged out from all devices.",
+        });
+    }
+    
+
+    // ============================================================
+    // 5. Resend Otp 
+    // ============================================================
+    [HttpPost("resend-otp")]
+    public async Task<IActionResult> ResendOtp([FromBody] ResendOtpDto resendOtpDto)
+    {
+        var result = await _authService.ResendOtpAsync(resendOtpDto);
+        return Ok(new ApiResponse<OtpSentResponseDto>
+        {
+            Success = true,
+            Message = "OTP resent successfully.",
+            Data = result
         });
     }
 }

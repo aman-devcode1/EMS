@@ -34,4 +34,7 @@ public interface IAuthService
     // 🔥 Admin/Manager Login OTP verify — verify hone par tokens milenge
     Task<TokenResponseDto> VerifyAdminLoginOtpAsync(VerifyOtpDto verifyOtpDto);
 
+    //  🔥 Resend Otp
+    Task<OtpSentResponseDto> ResendOtpAsync(ResendOtpDto resendOtpDto);
+
 }
