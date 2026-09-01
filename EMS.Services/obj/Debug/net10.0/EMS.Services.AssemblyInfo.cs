@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("EMS.Services")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c0a71cbbc286c95533b243a5ec3d76d56c3ce6f3")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ce10407a5cce54cd1534a0db37d5885fb5d5b582")]
 [assembly: System.Reflection.AssemblyProductAttribute("EMS.Services")]
 [assembly: System.Reflection.AssemblyTitleAttribute("EMS.Services")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
