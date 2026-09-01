@@ -41,6 +41,21 @@ else
 builder.Services.AddControllers();
 
 // ============================================================
+// 🔥 CORS (Allow Angular Frontend)
+// ============================================================
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAngularApp",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:4200") // 👈 Angular Dev Server URL
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials(); // 👈 JWT Token को Allow करने के लिए
+        });
+});
+
+// ============================================================
 // AutoMapper - Manually Configure (Static API)
 // ============================================================
 builder.Services.AddAutoMapper(cfg =>
@@ -109,6 +124,8 @@ app.UseSwaggerUI(c =>
 {
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "EMS API V1");
 });
+
+app.UseCors("AllowAngularApp");
 
 if (!app.Environment.IsDevelopment()) { app.UseHttpsRedirection(); }
 app.UseAuthentication();
