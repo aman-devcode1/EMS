@@ -76,6 +76,25 @@ TestResults/
 ## ============================================================
 *.Designer.cs.bak
 
+# ============================================================
+# COMPILED FRONTEND OUTPUT (auto-generated, must not be tracked)
+# ============================================================
+Backend/EMS.API/wwwroot/
+Backend/wwwroot/
+
+# ============================================================
+# Local Environment Overrides (अपनी local settings किसी और के साथ शेयर मत करो)
+# ============================================================
+src/environments/environment*.local.ts
+render.env
+*.env
+.env
+.env.local
+.env.*.local
+prod dev file.txt
+*secrets*.txt
+*keys*.txt
+
 
 
 
@@ -101,12 +120,6 @@ temp/
 .angular/
 .cache/
 
-# Local Environment Overrides (अपनी local settings किसी और के साथ शेयर मत करो)
-src/environments/environment*.local.ts
-.env
-.env.local
-.env.*.local
-
 # Unit Test Coverage Reports (टेस्ट रिपोर्ट्स की जरूरत नहीं)
 coverage/
 *.lcov
@@ -114,4 +127,3 @@ coverage/
 
 # Angular CLI Analytics (Local cache)
 .angular/cache/
-prod dev file.txt

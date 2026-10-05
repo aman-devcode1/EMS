@@ -1,33 +1,48 @@
-# Build Stage
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
-WORKDIR /src
+# ============================================================
+# Stage 1: Angular (Frontend) build
+# ============================================================
+FROM node:22-slim AS frontend
+WORKDIR /src/Frontend
 
-# Copy csproj files and restore dependencies
-COPY ["EMS.API/EMS.API.csproj", "EMS.API/"]
-COPY ["EMS.Core/EMS.Core.csproj", "EMS.Core/"]
-COPY ["EMS.Infrastructure/EMS.Infrastructure.csproj", "EMS.Infrastructure/"]
-COPY ["EMS.Services/EMS.Services.csproj", "EMS.Services/"]
+# पहले सिर्फ़ package files copy करें, ताकि npm install cache हो सके
+COPY Frontend/package*.json ./
+RUN npm ci
+
+COPY Frontend/ ./
+# angular.json का outputPath = ../Backend/EMS.API/wwwroot
+# यानी output /src/Backend/EMS.API/wwwroot में बनेगा
+RUN npm run build
+
+# ============================================================
+# Stage 2: .NET (Backend) build + publish
+# ============================================================
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src/Backend
+
+# पहले सिर्फ़ csproj files, ताकि restore cache हो सके
+COPY Backend/EMS.API/EMS.API.csproj EMS.API/
+COPY Backend/EMS.Core/EMS.Core.csproj EMS.Core/
+COPY Backend/EMS.Infrastructure/EMS.Infrastructure.csproj EMS.Infrastructure/
+COPY Backend/EMS.Services/EMS.Services.csproj EMS.Services/
 RUN dotnet restore "EMS.API/EMS.API.csproj"
 
-# Copy everything else and build
-COPY . .
-WORKDIR "/src/EMS.API"
-RUN dotnet build "EMS.API.csproj" -c Release -o /app/build
+# बाकी Backend code
+COPY Backend/ ./
 
-# Publish Stage
-FROM build AS publish
-RUN dotnet publish "EMS.API.csproj" -c Release -o /app/publish /p:UseAppHost=false
+# Stage 1 में बना Angular output यहाँ लाएँ
+COPY --from=frontend /src/Backend/EMS.API/wwwroot ./EMS.API/wwwroot
 
-# Runtime Stage
+RUN dotnet publish "EMS.API/EMS.API.csproj" -c Release -o /app/publish /p:UseAppHost=false
+
+# ============================================================
+# Stage 3: Runtime
+# ============================================================
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 EXPOSE 8080
-EXPOSE 8081
 
-# Copy published output
-COPY --from=publish /app/publish .
+COPY --from=build /app/publish .
 
-# Set environment variable for Render
 ENV ASPNETCORE_URLS=http://+:8080
 
 ENTRYPOINT ["dotnet", "EMS.API.dll"]
