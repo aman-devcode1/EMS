@@ -1,0 +1,391 @@
+/* ============================================================ */
+/* LOADING                                                      */
+/* ============================================================ */
+.hint {
+  padding: 16px;
+  color: var(--slate);
+  font-size: 0.9rem;
+}
+
+/* ============================================================ */
+/* HEAD ROW                                                     */
+/* ============================================================ */
+.profile-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 26px;
+  flex-wrap: wrap;
+}
+
+.profile-head__text h1 {
+  font-size: 1.6rem;
+  margin: 0 0 4px 0;
+  color: var(--ink);
+}
+
+.profile-head__text p {
+  color: var(--slate);
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.profile-head__actions {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 640px) {
+  .profile-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .profile-head__actions {
+    width: 100%;
+  }
+
+  .profile-head__actions .btn {
+    flex: 1;
+  }
+}
+
+/* ============================================================ */
+/* PROFILE CARD                                                 */
+/* ============================================================ */
+.profile-card {
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* ============================================================ */
+/* HERO                                                         */
+/* ============================================================ */
+.profile-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 26px 28px;
+  background: linear-gradient(135deg, #16233b 0%, #223250 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.profile-hero::after {
+  content: '';
+  position: absolute;
+  right: -50px;
+  top: -50px;
+  width: 180px;
+  height: 180px;
+  border: 1px solid rgba(185, 134, 61, 0.2);
+  border-radius: 50%;
+}
+
+.profile-hero__main {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+.profile-avatar {
+  width: 68px;
+  height: 68px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 2px solid var(--brass);
+  background: rgba(185, 134, 61, 0.15);
+  color: var(--brass);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-size: 1.5rem;
+  letter-spacing: 0.5px;
+}
+
+.profile-hero__text h2 {
+  color: #fff;
+  font-size: 1.35rem;
+  margin: 0 0 4px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-role {
+  display: inline-block;
+  font-size: 0.72rem;
+  color: var(--brass);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+}
+
+.profile-hero__aside {
+  position: relative;
+  z-index: 1;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.profile-hero__aside h3 {
+  color: #fff;
+  font-size: 1.05rem;
+  margin: 0 0 4px 0;
+  font-family: var(--font-serif);
+  font-weight: 600;
+}
+
+.profile-hero__aside p {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.82rem;
+  margin: 0;
+  max-width: 300px;
+  line-height: 1.45;
+}
+
+/* ============================================================ */
+/* PROFILE BODY — DETAILS VIEW (horizontal rows)                */
+/* ============================================================ */
+.profile-body {
+  padding: 0;
+}
+
+.info-row {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  column-gap: 16px;
+  padding: 18px 28px;
+  border-bottom: 1px solid var(--line);
+  align-items: baseline;
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.info-label {
+  font-size: 0.72rem;
+  color: var(--slate);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+}
+
+.info-value {
+  font-size: 0.98rem;
+  color: var(--ink);
+  font-weight: 500;
+  word-break: break-word;
+}
+
+/* ============================================================ */
+/* PROFILE BODY — FORM VIEWS (horizontal label/input)           */
+/* ============================================================ */
+.profile-body--form {
+  padding: 28px;
+  max-width: 720px;
+}
+
+/* Horizontal form-group */
+.profile-body--form .form-group {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  column-gap: 16px;
+  row-gap: 4px;
+  align-items: start;
+  margin-bottom: 18px;
+}
+
+.profile-body--form .form-group label {
+  margin: 0;
+  padding-top: 12px;
+  /* aligns label text with input text */
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.2;
+}
+
+.profile-body--form .form-group .form-control {
+  width: 100%;
+}
+
+.profile-body--form .form-group .field-hint,
+.profile-body--form .form-group .text-danger {
+  grid-column: 2;
+}
+
+.field-hint {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.75rem;
+  color: var(--slate-light);
+}
+
+.optional-tag {
+  font-weight: 500;
+  color: var(--slate);
+}
+
+/* ============================================================ */
+/* PASSWORD INPUT WITH SHOW/HIDE TOGGLE                         */
+/* ============================================================ */
+.password-wrap {
+  position: relative;
+}
+
+.password-wrap .form-control {
+  padding-right: 44px;
+  /* space for the eye button */
+}
+
+.eye-btn {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: var(--slate);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.eye-btn:hover {
+  background: #f4f1ea;
+  color: var(--ink);
+}
+
+.eye-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Actions — right-aligned */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+
+/* ============================================================ */
+/* FIELD VALIDATION ERRORS                                      */
+/* ============================================================ */
+.form-control.invalid {
+  border-color: var(--brick);
+  box-shadow: 0 0 0 3px rgba(176, 69, 59, 0.1);
+}
+
+.field-error {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.78rem;
+  color: var(--brick);
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+/* Error inside horizontal form grid — spans only the input column */
+.profile-body--form .form-group .field-error {
+  grid-column: 2;
+}
+
+@media (max-width: 640px) {
+  .profile-body--form .form-group .field-error {
+    grid-column: 1;
+  }
+}
+
+/* ============================================================ */
+/* TABLET                                                       */
+/* ============================================================ */
+@media (max-width: 768px) {
+  .profile-hero {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .profile-hero__aside {
+    text-align: left;
+  }
+
+  .profile-hero__aside p {
+    max-width: none;
+  }
+}
+
+/* ============================================================ */
+/* MOBILE — labels stacked above inputs                         */
+/* ============================================================ */
+@media (max-width: 640px) {
+  .info-row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+    padding: 14px 20px;
+  }
+
+  .profile-body--form .form-group {
+    grid-template-columns: 1fr;
+    row-gap: 6px;
+  }
+
+  .profile-body--form .form-group label {
+    padding-top: 0;
+  }
+
+  .profile-body--form .form-group .field-hint,
+  .profile-body--form .form-group .text-danger {
+    grid-column: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-hero {
+    padding: 22px 20px;
+  }
+
+  .profile-avatar {
+    width: 56px;
+    height: 56px;
+    font-size: 1.25rem;
+  }
+
+  .profile-hero__text h2 {
+    font-size: 1.15rem;
+    white-space: normal;
+  }
+
+  .profile-body--form {
+    padding: 20px;
+  }
+
+  .form-actions {
+    flex-direction: column-reverse;
+  }
+
+  .form-actions .btn {
+    width: 100%;
+  }
+}

@@ -30,4 +30,4 @@ COPY --from=publish /app/publish .
 # Set environment variable for Render
 ENV ASPNETCORE_URLS=http://+:8080
 
-ENTRYPOINT ["dotnet", "EMS.API.dll"]g
+ENTRYPOINT ["dotnet", "EMS.API.dll"]

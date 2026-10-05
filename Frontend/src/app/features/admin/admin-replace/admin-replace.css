@@ -1,0 +1,444 @@
+/* =========================================================
+   ADMIN REPLACE — Modern, matches admin-profile design
+   Base tokens from styles.css
+   ========================================================= */
+
+/* =========================================================
+   SHELL
+   ========================================================= */
+.replace-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 4fr) minmax(0, 6fr);
+  width: 100%;
+  min-height: calc(100vh - 160px);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow:
+    0 1px 2px rgba(22, 35, 59, 0.04),
+    0 12px 32px rgba(22, 35, 59, 0.06),
+    0 32px 64px rgba(22, 35, 59, 0.05);
+}
+
+/* =========================================================
+   LEFT — BRAND PANEL (dark gradient + brass glow + dot grid)
+   ========================================================= */
+.replace-brand {
+  position: relative;
+  padding: 52px 44px;
+  background: linear-gradient(160deg, #16233b 0%, #1a2a47 45%, #223250 100%);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+}
+
+/* Soft brass glow — same as profile-hero */
+.replace-brand::before {
+  content: '';
+  position: absolute;
+  top: -140px;
+  right: -140px;
+  width: 420px;
+  height: 420px;
+  background: radial-gradient(circle, rgba(185, 134, 61, 0.2) 0%, transparent 65%);
+  pointer-events: none;
+}
+
+/* Dot grid pattern */
+.replace-brand::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 26px 26px;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+/* EMS Mark — glow ring like profile avatar */
+.replace-mark {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border: 2px solid var(--brass);
+  border-radius: 50%;
+  background: rgba(185, 134, 61, 0.12);
+  color: var(--brass);
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-size: 1.15rem;
+  letter-spacing: 0.03em;
+  box-shadow:
+    0 0 0 7px rgba(185, 134, 61, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+}
+
+/* Brand body */
+.replace-brand__body {
+  position: relative;
+  z-index: 1;
+  max-width: 380px;
+}
+
+.replace-brand__body h1 {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-size: 2.1rem;
+  letter-spacing: -0.025em;
+  line-height: 1.12;
+  color: #fff;
+  margin-bottom: 18px;
+}
+
+.replace-brand__body p {
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 0.98rem;
+  line-height: 1.7;
+  margin: 0;
+}
+
+/* Brand footer — live dot indicator */
+.replace-brand__foot {
+  position: relative;
+  z-index: 1;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.45);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 20px;
+  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.replace-brand__foot::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--forest);
+  box-shadow: 0 0 0 3px rgba(63, 120, 86, 0.25);
+  flex-shrink: 0;
+}
+
+/* =========================================================
+   RIGHT — FORM PANEL
+   ========================================================= */
+.replace-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 52px 44px;
+  background: var(--paper);
+}
+
+.replace-panel__inner {
+  width: 100%;
+  max-width: 430px;
+  animation: replaceFade 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes replaceFade {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.replace-panel__inner h2 {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-size: 1.85rem;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  margin-bottom: 8px;
+  color: var(--ink);
+}
+
+.replace-form__hint {
+  font-size: 0.92rem;
+  color: var(--slate);
+  margin-bottom: 32px;
+  line-height: 1.6;
+}
+
+/* =========================================================
+   SECTION DIVIDER — brass dot indicator
+   ========================================================= */
+.replace-form-section {
+  margin: 32px 0 22px;
+  padding-top: 26px;
+  border-top: 1px solid var(--line);
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--slate);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.replace-form-section::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--brass);
+  box-shadow: 0 0 0 3px rgba(185, 134, 61, 0.2);
+  flex-shrink: 0;
+}
+
+/* =========================================================
+   FORM INPUTS — modern radius + soft focus + hover
+   ========================================================= */
+.replace-panel__inner .form-group {
+  margin-bottom: 22px;
+}
+
+.replace-panel__inner .form-group label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: 0.01em;
+  margin-bottom: 8px;
+}
+
+.replace-panel__inner .form-control {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--paper-raised);
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  color: var(--ink);
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.replace-panel__inner .form-control::placeholder {
+  color: var(--slate-light);
+}
+
+.replace-panel__inner .form-control:hover:not(:focus):not(.invalid) {
+  border-color: var(--slate-light);
+}
+
+.replace-panel__inner .form-control:focus {
+  outline: none;
+  border-color: var(--brass);
+  box-shadow: 0 0 0 4px rgba(185, 134, 61, 0.12);
+  background: var(--paper-raised);
+}
+
+.replace-panel__inner .form-control.invalid {
+  border-color: var(--brick);
+  box-shadow: 0 0 0 4px rgba(176, 69, 59, 0.1);
+}
+
+/* =========================================================
+   OPTIONAL TAG
+   ========================================================= */
+.optional-tag {
+  font-weight: 400;
+  color: var(--slate-light);
+  font-size: 0.85em;
+  margin-left: 2px;
+}
+
+/* =========================================================
+   PASSWORD SHOW / HIDE
+   ========================================================= */
+.password-wrapper {
+  position: relative;
+}
+
+.password-wrapper .form-control {
+  padding-right: 72px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  padding: 6px 10px;
+  color: var(--slate);
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 6px;
+  letter-spacing: 0.02em;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.password-toggle:hover {
+  color: var(--ink);
+  background: rgba(22, 35, 59, 0.05);
+}
+
+.password-toggle:focus-visible {
+  outline: 2px solid var(--brass);
+  outline-offset: 2px;
+}
+
+/* =========================================================
+   FIELD ERRORS
+   ========================================================= */
+.field-error {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.78rem;
+  color: var(--brick);
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+/* =========================================================
+   ACTION BUTTONS — same as profile form-actions
+   ========================================================= */
+.replace-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 30px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+
+.replace-actions .btn {
+  padding: 12px 22px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition:
+    transform 0.15s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.2s ease,
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.replace-actions .btn-primary {
+  flex: 0 0 auto;
+  box-shadow:
+    0 1px 2px rgba(185, 134, 61, 0.25),
+    0 4px 14px rgba(185, 134, 61, 0.2);
+}
+
+.replace-actions .btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow:
+    0 2px 4px rgba(185, 134, 61, 0.3),
+    0 8px 20px rgba(185, 134, 61, 0.28);
+}
+
+.replace-actions .btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.replace-actions .btn-outline {
+  flex: 0 0 auto;
+  text-decoration: none;
+  border-radius: 8px;
+}
+
+.replace-actions .btn-outline:hover:not(:disabled) {
+  background: rgba(176, 69, 59, 0.04);
+  transform: translateY(-1px);
+}
+
+/* =========================================================
+   RESPONSIVE — Tablet
+   ========================================================= */
+@media (max-width: 860px) {
+  .replace-shell {
+    grid-template-columns: 1fr;
+    min-height: 0;
+    border-radius: 14px;
+  }
+
+  .replace-brand {
+    padding: 40px 32px;
+    gap: 20px;
+  }
+
+  .replace-brand__body h1 {
+    font-size: 1.7rem;
+  }
+
+  .replace-panel {
+    padding: 40px 30px;
+  }
+
+  .replace-panel__inner h2 {
+    font-size: 1.55rem;
+  }
+}
+
+/* =========================================================
+   RESPONSIVE — Mobile
+   ========================================================= */
+@media (max-width: 520px) {
+  .replace-shell {
+    border-radius: 12px;
+  }
+
+  .replace-brand {
+    padding: 32px 24px;
+  }
+
+  .replace-mark {
+    width: 54px;
+    height: 54px;
+    font-size: 0.95rem;
+  }
+
+  .replace-brand__body h1 {
+    font-size: 1.45rem;
+    margin-bottom: 14px;
+  }
+
+  .replace-brand__body p {
+    font-size: 0.9rem;
+  }
+
+  .replace-panel {
+    padding: 32px 22px;
+  }
+
+  .replace-panel__inner h2 {
+    font-size: 1.35rem;
+  }
+
+  .replace-form__hint {
+    margin-bottom: 26px;
+  }
+
+  .replace-actions {
+    flex-direction: column-reverse;
+  }
+
+  .replace-actions .btn {
+    width: 100%;
+    flex: 1 1 auto;
+  }
+}

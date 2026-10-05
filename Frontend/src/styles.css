@@ -1,0 +1,381 @@
+/* ============================================================
+   EMS — GLOBAL DESIGN SYSTEM ("The Registry")
+   Sirf woh cheezein yahan hain jo GENUINELY har page/component
+   mein common hain: color tokens, fonts, reset, buttons, form
+   fields. Kisi ek page ka apna design (auth-shell, sidebar,
+   dashboard cards, otp field, toast) uski apni .css file mein hai.
+   ============================================================ */
+
+:root {
+    --ink: #16233b;
+    --ink-soft: #223250;
+    --paper: #f1f1ec;
+    --paper-raised: #ffffff;
+    --brass: #b9863d;
+    --brass-dark: #9c6f30;
+    --slate: #5b6472;
+    --slate-light: #8891a0;
+    --forest: #3f7856;
+    --brick: #b0453b;
+    --line: #dbdcd4;
+    --line-on-ink: rgba(255, 255, 255, 0.14);
+
+    --font-serif: 'IBM Plex Serif', Georgia, serif;
+    --font-sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'IBM Plex Mono', 'Courier New', monospace;
+
+    --radius: 3px;
+
+    /* ============================================================
+       SEMANTIC STATE TOKENS
+       Badges, alerts, status indicators — built on existing palette
+       ============================================================ */
+
+    /* Success / Active (Forest based) */
+    --success-bg: rgba(63, 120, 86, 0.12);
+    --success-border: rgba(63, 120, 86, 0.28);
+    --success-text: #2f6b45;
+
+    /* Info (Blue) */
+    --info-bg: rgba(30, 91, 205, 0.10);
+    --info-border: rgba(30, 91, 205, 0.25);
+    --info-text: #1e5bcd;
+
+    /* Warning / Manager (Brass based) */
+    --warning-bg: rgba(185, 134, 61, 0.14);
+    --warning-border: rgba(185, 134, 61, 0.30);
+    --warning-text: var(--brass-dark);
+
+    /* Danger / Inactive (Brick based) */
+    --danger-bg: rgba(176, 69, 59, 0.12);
+    --danger-border: rgba(176, 69, 59, 0.28);
+    --danger-text: #8a3a30;
+
+    /* Neutral badge (Slate based) */
+    --neutral-bg: rgba(91, 100, 114, 0.10);
+    --neutral-border: rgba(91, 100, 114, 0.22);
+    --neutral-text: var(--slate);
+}
+
+/* --- Reset --- */
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4 {
+    font-family: var(--font-serif);
+    font-weight: 600;
+    color: var(--ink);
+    margin: 0 0 0.4em 0;
+    line-height: 1.25;
+}
+
+p {
+    margin: 0 0 1em 0;
+    color: var(--slate);
+}
+
+a {
+    color: var(--brass-dark);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+:focus-visible {
+    outline: 2px solid var(--brass);
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+    }
+}
+
+/* ============================================================
+   BADGES — reusable across the app
+   ============================================================ */
+.badge {
+    display: inline-block;
+    padding: 4px 10px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    border-radius: 12px;
+    text-transform: capitalize;
+    line-height: 1.2;
+    white-space: nowrap;
+    border: 1px solid transparent;
+}
+
+.badge--neutral {
+    background: var(--neutral-bg);
+    color: var(--neutral-text);
+    border-color: var(--neutral-border);
+}
+
+.badge--info {
+    background: var(--info-bg);
+    color: var(--info-text);
+    border-color: var(--info-border);
+}
+
+.badge--warning {
+    background: var(--warning-bg);
+    color: var(--warning-text);
+    border-color: var(--warning-border);
+}
+
+.badge--success {
+    background: var(--success-bg);
+    color: var(--success-text);
+    border-color: var(--success-border);
+}
+
+.badge--danger {
+    background: var(--danger-bg);
+    color: var(--danger-text);
+    border-color: var(--danger-border);
+}
+
+/* ============================================================
+   FORMS — genuinely used by every form in the app
+   ============================================================ */
+.form-group {
+    margin-bottom: 18px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 6px;
+    letter-spacing: 0.01em;
+}
+
+.form-control {
+    width: 100%;
+    padding: 11px 13px;
+    font-family: var(--font-sans);
+    font-size: 0.95rem;
+    color: var(--ink);
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.form-control::placeholder {
+    color: var(--slate-light);
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--brass);
+    box-shadow: 0 0 0 3px rgba(185, 134, 61, 0.15);
+}
+
+.text-danger {
+    display: block;
+    margin-top: 6px;
+    font-size: 0.8rem;
+    color: var(--brick);
+}
+
+.alert {
+    padding: 12px 14px;
+    border-radius: var(--radius);
+    font-size: 0.87rem;
+    margin-bottom: 18px;
+    border: 1px solid transparent;
+}
+
+.alert-danger {
+    background: rgba(176, 69, 59, 0.08);
+    border-color: rgba(176, 69, 59, 0.25);
+    color: var(--brick);
+}
+
+/* ============================================================
+   BUTTONS — genuinely used everywhere
+   ============================================================ */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 11px 20px;
+    font-family: var(--font-sans);
+    font-size: 0.92rem;
+    font-weight: 600;
+    border: 1px solid transparent;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background-color 0.15s ease, transform 0.1s ease, border-color 0.15s ease;
+}
+
+.btn:active {
+    transform: translateY(1px);
+}
+
+.btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-primary {
+    background: var(--brass);
+    color: #fff;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: var(--brass-dark);
+}
+
+.btn-success {
+    background: var(--forest);
+    color: #fff;
+}
+
+.btn-success:hover:not(:disabled) {
+    filter: brightness(1.08);
+}
+
+.btn-outline {
+    background: transparent;
+    border-color: var(--line);
+    color: var(--ink);
+}
+
+.btn-outline:hover:not(:disabled) {
+    border-color: var(--brick);
+    color: var(--brick);
+}
+
+.btn-link {
+    background: none;
+    border: none;
+    padding: 4px;
+    color: var(--brass-dark);
+    font-weight: 600;
+}
+
+.btn-link:hover:not(:disabled) {
+    text-decoration: underline;
+}
+
+.mt-3 {
+    margin-top: 1rem;
+    width: 100%;
+}
+
+/* ============================================================
+   GENERIC CONTAINERS — reused as-is by more than one page
+   (admin-replace, employee-dashboard, admin-dashboard, aur
+   future employee-management pages sab isi "bordered panel"
+   look ko share karenge)
+   ============================================================ */
+.page-head {
+    margin-bottom: 28px;
+}
+
+.page-head h1 {
+    font-size: 1.6rem;
+}
+
+.panel {
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 24px;
+}
+
+/* Invalid Form */
+.form-control.invalid {
+    border-color: var(--brick);
+    box-shadow: 0 0 0 3px rgba(176, 69, 59, 0.1);
+}
+
+
+@font-face {
+    font-family: 'IBM Plex Sans';
+    src: url('/assets/fonts/IBM-Plex-Sans-Regular.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'IBM Plex Sans';
+    src: url('/assets/fonts/IBM-Plex-Sans-Medium.woff2') format('woff2');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'IBM Plex Sans';
+    src: url('/assets/fonts/IBM-Plex-Sans-SemiBold.woff2') format('woff2');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'IBM Plex Sans';
+    src: url('/assets/fonts/IBM-Plex-Sans-Bold.woff2') format('woff2');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'IBM Plex Serif';
+    src: url('/assets/fonts/IBM-Plex-Serif-Medium.woff2') format('woff2');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'IBM Plex Serif';
+    src: url('/assets/fonts/IBM-Plex-Serif-SemiBold.woff2') format('woff2');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'IBM Plex Mono';
+    src: url('/assets/fonts/IBM-Plex-Mono-Regular.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}

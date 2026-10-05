@@ -1,0 +1,488 @@
+/* ============================================================ */
+/* PAGE HEAD                                                    */
+/* ============================================================ */
+.page-head {
+  margin-bottom: 28px;
+}
+
+.page-head h1 {
+  font-size: 1.6rem;
+}
+
+.page-head p {
+  color: var(--slate);
+  margin: 4px 0 0 0;
+  font-size: 0.9rem;
+}
+
+.hint {
+  padding: 16px;
+  color: var(--slate);
+  font-size: 0.9rem;
+}
+
+.table-wrap {
+  width: 100%;
+}
+
+/* ============================================================ */
+/* TABLE                                                        */
+/* ============================================================ */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.data-table th,
+.data-table td {
+  padding: 14px 18px;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.88rem;
+  vertical-align: middle;
+}
+
+.data-table th {
+  font-weight: 600;
+  background: var(--paper);
+  color: var(--ink);
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.data-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* ============================================================ */
+/* ROW — clickable + hover hint (accent bar + chevron)          */
+/* ============================================================ */
+/* Row — clickable + hover hint */
+.row-clickable {
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.row-clickable:hover {
+  background: rgba(185, 134, 61, 0.04);
+}
+
+.row-clickable:active {
+  background: rgba(185, 134, 61, 0.08);
+}
+
+/* Accent bar — first cell pe, kyunki tr pe position: relative
+   tables me reliably kaam nahi karta (extra anonymous cell
+   inject ho jata hai aur columns shift ho jate hain). */
+.row-clickable td:first-child {
+  position: relative;
+}
+
+.row-clickable td:first-child::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--brass);
+  transform: scaleY(0);
+  transform-origin: center;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
+.row-clickable:hover td:first-child::before {
+  transform: scaleY(1);
+}
+
+/* ============================================================ */
+/* EMPLOYEE CELL                                                */
+/* ============================================================ */
+.cell-employee {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 160px;
+}
+
+.cell-employee__main {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cell-employee__name {
+  font-weight: 600;
+  color: var(--ink);
+  font-size: 0.92rem;
+}
+
+/* Chevron — fades + slides in on row hover */
+.cell-employee__chevron {
+  width: 14px;
+  height: 14px;
+  color: var(--brass);
+  flex-shrink: 0;
+  opacity: 0;
+  transform: translateX(-6px);
+  transition:
+    opacity 0.2s ease,
+    transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.row-clickable:hover .cell-employee__chevron {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.cell-employee__sub {
+  font-size: 0.76rem;
+  color: var(--slate);
+}
+
+.cell-employee__sub--muted {
+  color: var(--slate-light);
+  font-style: italic;
+}
+
+/* ============================================================ */
+/* MUTED                                                        */
+/* ============================================================ */
+.muted {
+  color: var(--slate-light);
+  font-style: italic;
+  font-size: 0.82rem;
+}
+
+/* ============================================================ */
+/* ACTIONS COLUMN                                               */
+/* ============================================================ */
+.col-actions {
+  width: 80px;
+  min-width: 80px;
+  text-align: left;
+  white-space: nowrap;
+  padding-left: 8px;
+}
+
+.data-table th.col-actions {
+  text-align: left;
+  padding-left: 8px;
+}
+
+/* Header ko bhi right-align karo — warna misaligned lagega */
+.data-table th.col-actions {
+  text-align: right;
+  padding-right: 20px;
+}
+
+/* ============================================================ */
+/* TOGGLE BUTTON (Promote to Manager)                           */
+/* ============================================================ */
+.toggle-btn {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  border-radius: 24px;
+  border: none;
+  background: var(--line);
+  cursor: pointer;
+  padding: 0;
+  transition: background-color 0.2s ease;
+  vertical-align: middle;
+}
+
+.toggle-btn.on {
+  background: var(--forest);
+}
+
+.toggle-btn:disabled,
+.toggle-btn.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.toggle-btn:focus-visible {
+  outline: 2px solid var(--brass);
+  outline-offset: 2px;
+}
+
+.toggle-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  background: var(--paper-raised);
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+  box-shadow: 0 1px 3px rgba(22, 35, 59, 0.15);
+}
+
+.toggle-btn.on .toggle-knob {
+  transform: translateX(20px);
+}
+
+/* ============================================================ */
+/* ICON BUTTON (kept for reuse on other pages)                  */
+/* ============================================================ */
+.icon-btn {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--slate);
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.1s ease;
+}
+
+.icon-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.icon-btn:hover {
+  color: var(--brass-dark);
+  background: rgba(185, 134, 61, 0.08);
+  border-color: var(--brass);
+}
+
+.icon-btn:active {
+  transform: scale(0.95);
+}
+
+/* ============================================================ */
+/* TABLET — 1024px                                              */
+/* ============================================================ */
+@media (max-width: 1024px) {
+
+  .data-table th,
+  .data-table td {
+    padding: 12px 14px;
+    font-size: 0.85rem;
+  }
+
+  .col-actions {
+    width: 70px;
+    padding-left: 6px;
+  }
+
+  .cell-employee {
+    min-width: 140px;
+  }
+}
+
+/* ============================================================ */
+/* SMALL TABLET / LARGE MOBILE — 900px                          */
+/* ============================================================ */
+@media (max-width: 900px) {
+
+  .data-table th,
+  .data-table td {
+    padding: 11px 12px;
+    font-size: 0.83rem;
+  }
+
+  .col-actions {
+    width: 60px;
+    padding-right: 6px;
+  }
+
+  .cell-employee {
+    min-width: 130px;
+  }
+}
+
+/* ============================================================ */
+/* MOBILE — 768px — table converts to cards                     */
+/* ============================================================ */
+@media (max-width: 768px) {
+  .page-head {
+    margin-bottom: 20px;
+  }
+
+  .page-head h1 {
+    font-size: 1.4rem;
+  }
+
+  /* Table reset */
+  .data-table {
+    border: none;
+    background: transparent;
+    border-radius: 0;
+  }
+
+  .data-table thead {
+    display: none;
+  }
+
+  .data-table,
+  .data-table tbody,
+  .data-table tr,
+  .data-table td {
+    display: block;
+    width: 100%;
+  }
+
+  /* Row = card */
+  .data-table tr {
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    margin-bottom: 12px;
+    padding: 14px 16px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .data-table tr:hover {
+    border-color: var(--brass);
+  }
+
+  /* Mobile me accent bar left edge pe hamesha visible nahi — hatao */
+  .row-clickable td:first-child::before {
+    display: none;
+  }
+
+  /* Cell — label left, value right */
+  .data-table td {
+    border: none;
+    padding: 8px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    text-align: right;
+  }
+
+  .data-table td:not(:last-child) {
+    border-bottom: 1px dashed var(--line);
+  }
+
+  /* Pseudo-label from data-label */
+  .data-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--slate);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    text-align: left;
+    flex-shrink: 0;
+  }
+
+  /* Employee cell align to right */
+  .cell-employee {
+    align-items: flex-end;
+    min-width: 0;
+  }
+
+  /* Chevron hamesha visible on mobile — hover possible nahi */
+  .cell-employee__chevron {
+    opacity: 0.6;
+    transform: translateX(0);
+  }
+
+  /* Email word-break */
+  .data-table td[data-label="Email"] {
+    word-break: break-word;
+  }
+
+  /* Actions row — full width, right aligned */
+  .col-actions {
+    width: 100%;
+    justify-content: flex-end;
+    padding-top: 12px !important;
+    padding-right: 0;
+    border-top: 1px solid var(--line);
+    border-bottom: none !important;
+  }
+
+  .col-actions::before {
+    display: none;
+  }
+}
+
+/* ============================================================ */
+/* SMALL MOBILE — 480px                                         */
+/* ============================================================ */
+@media (max-width: 480px) {
+  .page-head h1 {
+    font-size: 1.25rem;
+  }
+
+  .page-head p {
+    font-size: 0.85rem;
+  }
+
+  .data-table tr {
+    padding: 12px 14px;
+  }
+
+  .data-table td {
+    padding: 7px 0;
+    font-size: 0.82rem;
+  }
+
+  .data-table td::before {
+    font-size: 0.66rem;
+  }
+
+  .cell-employee__name {
+    font-size: 0.88rem;
+  }
+
+  .cell-employee__sub {
+    font-size: 0.72rem;
+  }
+
+  /* Toggle slightly smaller on very small screens */
+  .toggle-btn {
+    width: 40px;
+    height: 22px;
+  }
+
+  .toggle-knob {
+    width: 16px;
+    height: 16px;
+    top: 3px;
+    left: 3px;
+  }
+
+  .toggle-btn.on .toggle-knob {
+    transform: translateX(18px);
+  }
+}
+
+/* ============================================================ */
+/* TINY MOBILE — 360px                                          */
+/* ============================================================ */
+@media (max-width: 360px) {
+  .data-table tr {
+    padding: 10px 12px;
+  }
+
+  .data-table td {
+    padding: 6px 0;
+    font-size: 0.8rem;
+  }
+
+  .cell-employee__name {
+    font-size: 0.85rem;
+  }
+}

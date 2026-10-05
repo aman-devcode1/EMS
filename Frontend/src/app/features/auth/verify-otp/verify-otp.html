@@ -1,0 +1,70 @@
+<div class="auth-shell">
+  <aside class="auth-brand">
+    <span class="auth-mark">EMS</span>
+    <div class="auth-brand__body">
+      <h1>Employee Management System</h1>
+      <p>{{ brandMessage }}</p>
+    </div>
+    <div class="auth-brand__foot">Internal personnel platform</div>
+  </aside>
+
+  <main class="auth-panel">
+    <div class="auth-panel__inner">
+        <!-- Back Button -->
+      <button type="button" class="back-btn" (click)="goBack()" aria-label="Go back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        <span>Back</span>
+      </button>
+      <h2>{{ pageHeading }}</h2>
+      <p class="otp-sent-to">Code sent to <strong>{{ email }}</strong></p>
+
+      <form [formGroup]="otpForm" (ngSubmit)="verifyOtp()" novalidate autocomplete="off">
+        <div class="form-group">
+          <label for="otp-code">6-digit code</label>
+          <input
+            id="otp-code"
+            type="text"
+            [name]="otpFieldName"
+            maxlength="6"
+            formControlName="code"
+            class="form-control otp-code-field"
+            [class.invalid]="otpForm.get('code')?.invalid && otpForm.get('code')?.touched"
+            placeholder="123456"
+            inputmode="numeric"
+            autocomplete="off"
+            readonly
+            onfocus="this.removeAttribute('readonly')"
+            (input)="onOtpInput($event)" />
+
+          <div class="field-error"
+            *ngIf="otpForm.get('code')?.touched && otpForm.get('code')?.invalid">
+            <ng-container *ngIf="otpForm.get('code')?.errors?.['required']">
+              OTP is required.
+            </ng-container>
+            <ng-container *ngIf="otpForm.get('code')?.errors?.['pattern']">
+              OTP must be exactly 6 digits.
+            </ng-container>
+          </div>
+        </div>
+
+        <button type="submit" [disabled]="isLoading" class="btn btn-success mt-3">
+          {{ buttonText }}
+        </button>
+      </form>
+
+      <div class="resend-section">
+        <button
+          type="button"
+          (click)="resendOtp()"
+          [disabled]="isResending || resendCooldown > 0"
+          class="btn btn-link">
+          {{ isResending ? 'Sending…' : (resendCooldown > 0 ? 'Resend code in ' + resendCooldown + 's' : 'Resend code') }}
+        </button>
+      </div>
+    </div>
+  </main>
+</div>

@@ -1,0 +1,104 @@
+.page-head { margin-bottom: 28px; }
+.page-head h1 { font-size: 1.6rem; }
+.page-head p { color: var(--slate); margin: 4px 0 0 0; }
+
+.hint { padding: 16px; color: var(--slate); font-size: 0.9rem; }
+
+.table-wrap { width: 100%; }
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.data-table th, .data-table td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.9rem;
+}
+.data-table th {
+  font-weight: 600;
+  background: #fafaf7;
+  color: var(--ink);
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+}
+.data-table tr:last-child td { border-bottom: none; }
+
+.remove-btn {
+  padding: 7px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--brick, #b0453b);
+  background: transparent;
+  color: var(--brick, #b0453b);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.remove-btn:hover:not(:disabled) {
+  background: var(--brick, #b0453b);
+  color: #fff;
+}
+.remove-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* TABLET */
+@media (max-width: 1024px) {
+  .page-head h1 { font-size: 1.4rem; }
+  .data-table th, .data-table td { padding: 10px 12px; font-size: 0.85rem; }
+}
+
+/* MOBILE — cards */
+@media (max-width: 640px) {
+  .page-head { margin-bottom: 20px; }
+  .page-head h1 { font-size: 1.25rem; }
+  .page-head p { font-size: 0.85rem; }
+
+  .data-table { border: none; background: transparent; border-radius: 0; }
+  .data-table thead { display: none; }
+  .data-table, .data-table tbody, .data-table tr, .data-table td {
+    display: block;
+    width: 100%;
+  }
+  .data-table tr {
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    margin-bottom: 12px;
+    padding: 14px 16px;
+  }
+  .data-table td {
+    border: none;
+    padding: 8px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    text-align: right;
+  }
+  .data-table td:not(:last-child) { border-bottom: 1px dashed var(--line); }
+  .data-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--slate);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    text-align: left;
+    flex-shrink: 0;
+  }
+  .data-table td[data-label="Email"] { word-break: break-word; }
+  .remove-btn { padding: 8px 14px; }
+}
+
+@media (max-width: 380px) {
+  .page-head h1 { font-size: 1.15rem; }
+  .data-table tr { padding: 12px 14px; }
+  .data-table td { padding: 6px 0; font-size: 0.85rem; }
+  .data-table td::before { font-size: 0.68rem; }
+}

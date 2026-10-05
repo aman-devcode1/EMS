@@ -1,0 +1,202 @@
+/* ============================================================
+   EMPLOYEE REGISTRATION
+   Page-specific styles only.
+   Common form/button styles are in styles.css.
+   ============================================================ */
+
+.auth-shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+}
+
+.auth-brand {
+  position: relative;
+  background: var(--ink);
+  color: #fff;
+  padding: 48px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+}
+
+.auth-brand::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 35px,
+    var(--line-on-ink) 35px,
+    var(--line-on-ink) 36px
+  );
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.auth-mark {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border: 1.5px solid var(--brass);
+  border-radius: 50%;
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-size: 1.05rem;
+  letter-spacing: 0.02em;
+  color: var(--brass);
+}
+
+.auth-brand__body {
+  position: relative;
+  max-width: 380px;
+}
+
+.auth-brand__body h1 {
+  font-size: 1.9rem;
+  color: #fff;
+  margin-bottom: 14px;
+}
+
+.auth-brand__body p {
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 0.95rem;
+}
+
+.auth-brand__foot {
+  position: relative;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.45);
+  border-top: 1px solid var(--line-on-ink);
+  padding-top: 16px;
+}
+
+.auth-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 32px;
+  background: var(--paper);
+}
+
+.auth-panel__inner {
+  width: 100%;
+  max-width: 400px;
+  animation: authRise 0.5s ease-out;
+}
+
+.auth-panel__inner h2 {
+  font-size: 1.5rem;
+  margin-bottom: 6px;
+}
+
+.auth-form__hint {
+  font-size: 0.88rem;
+  margin-bottom: 26px;
+}
+
+.auth-form__switch {
+  margin-top: 22px;
+  font-size: 0.87rem;
+  text-align: center;
+}
+
+/* ============================================================
+   PASSWORD SHOW / HIDE
+   ============================================================ */
+
+.password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-wrapper .form-control {
+  padding-right: 70px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 10px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--slate);
+  padding: 4px 6px;
+}
+
+.password-toggle:hover {
+  color: var(--ink);
+}
+
+.password-toggle:focus-visible {
+  outline: 2px solid var(--brass);
+  outline-offset: 2px;
+  border-radius: var(--radius);
+}
+
+/* ============================================================
+   OPTIONAL TAG
+   ============================================================ */
+
+.optional-tag {
+  font-weight: 500;
+  color: var(--slate);
+}
+
+/* ============================================================
+   VALIDATION MESSAGES (red)
+   ============================================================ */
+
+.field-error {
+  color: var(--brick);
+  font-size: 0.8rem;
+  margin-top: 6px;
+  line-height: 1.3;
+}
+
+.form-control.invalid {
+  border-color: var(--brick);
+}
+
+/* ============================================================
+   ANIMATION
+   ============================================================ */
+
+@keyframes authRise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 860px) {
+  .auth-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-brand {
+    display: none;
+  }
+
+  .auth-panel {
+    padding: 32px 20px;
+  }
+}

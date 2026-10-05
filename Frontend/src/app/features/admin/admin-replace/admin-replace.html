@@ -1,0 +1,161 @@
+<div class="replace-shell">
+  <aside class="replace-brand">
+    <span class="replace-mark">EMS</span>
+
+    <div class="replace-brand__body">
+      <h1>Replace admin</h1>
+      <p>
+        Register a new administrator and hand over access.
+        This immediately signs you out.
+      </p>
+    </div>
+
+    <div class="replace-brand__foot">
+      Internal personnel platform
+    </div>
+  </aside>
+
+  <main class="replace-panel">
+    <div class="replace-panel__inner">
+
+      <h2>Confirm &amp; register</h2>
+
+      <p class="replace-form__hint">
+        Verify your identity, then set up the incoming administrator.
+      </p>
+
+      <form [formGroup]="replaceForm" (ngSubmit)="onSubmit()" novalidate>
+
+        <!-- Current Password -->
+        <div class="form-group">
+          <label>Current password (confirmation)</label>
+
+          <div class="password-wrapper">
+            <input [type]="showCurrentPassword ? 'text' : 'password'" [name]="raCurrentPasswordFieldName"
+              formControlName="currentPassword" class="form-control" [class.invalid]="isInvalid('currentPassword')"
+              autocomplete="current-password" novalidate readonly onfocus="this.removeAttribute('readonly')" />
+
+            <button type="button" class="password-toggle" (click)="toggleCurrentPassword()"
+              [attr.aria-label]="showCurrentPassword ? 'Hide password' : 'Show password'">
+              {{ showCurrentPassword ? 'Hide' : 'Show' }}
+            </button>
+          </div>
+          <div class="field-error" *ngIf="isInvalid('currentPassword')">
+            {{ getError('currentPassword') }}
+          </div>
+        </div>
+
+        <!-- New Admin Section -->
+        <h3 class="replace-form-section">
+          New administrator's details
+        </h3>
+
+        <!-- First Name -->
+        <div class="form-group">
+          <label>First name</label>
+          <input type="text" [name]="raFirstNameFieldName" formControlName="newAdminFirstName" class="form-control"
+            [class.invalid]="isInvalid('newAdminFirstName')" maxlength="100" autocomplete="off" novalidate readonly
+            onfocus="this.removeAttribute('readonly')" />
+          <div class="field-error" *ngIf="isInvalid('newAdminFirstName')">
+            {{ getError('newAdminFirstName') }}
+          </div>
+        </div>
+
+        <!-- Last Name -->
+        <div class="form-group">
+          <label>Last name <span class="optional-tag">(Optional)</span></label>
+          <input type="text" [name]="raLastNameFieldName" formControlName="newAdminLastName" class="form-control"
+            [class.invalid]="isInvalid('newAdminLastName')" maxlength="100" autocomplete="off" novalidate readonly
+            onfocus="this.removeAttribute('readonly')" />
+          <div class="field-error" *ngIf="isInvalid('newAdminLastName')">
+            {{ getError('newAdminLastName') }}
+          </div>
+        </div>
+
+        <!-- Email -->
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" [name]="raEmailFieldName" formControlName="newAdminEmail" class="form-control"
+            [class.invalid]="isInvalid('newAdminEmail')" placeholder="you@company.com" maxlength="255"
+            autocomplete="new-password" novalidate readonly onfocus="this.removeAttribute('readonly')" />
+          <div class="field-error" *ngIf="isInvalid('newAdminEmail')">
+            {{ getError('newAdminEmail') }}
+          </div>
+        </div>
+
+        <!-- Phone -->
+        <div class="form-group">
+          <label>Phone number</label>
+          <input type="text" [name]="raPhoneFieldName" formControlName="newAdminPhoneNumber" class="form-control"
+            [class.invalid]="isInvalid('newAdminPhoneNumber')" placeholder="10-digit Indian number" inputmode="numeric"
+            maxlength="10" autocomplete="new-password" (input)="onPhoneInput($event)" novalidate readonly
+            onfocus="this.removeAttribute('readonly')" />
+          <div class="field-error" *ngIf="isInvalid('newAdminPhoneNumber')">
+            {{ getError('newAdminPhoneNumber') }}
+          </div>
+        </div>
+
+        <!-- New Password -->
+        <div class="form-group">
+          <label>Password</label>
+          <div class="password-wrapper">
+            <input [type]="showNewPassword ? 'text' : 'password'" [name]="raNewPasswordFieldName"
+              formControlName="newAdminPassword" class="form-control" [class.invalid]="isInvalid('newAdminPassword')"
+              autocomplete="new-password" novalidate readonly onfocus="this.removeAttribute('readonly')" />
+
+            <button type="button" class="password-toggle" (click)="toggleNewPassword()"
+              [attr.aria-label]="showNewPassword ? 'Hide password' : 'Show password'">
+              {{ showNewPassword ? 'Hide' : 'Show' }}
+            </button>
+          </div>
+          <div class="field-error" *ngIf="isInvalid('newAdminPassword')">
+            {{ getError('newAdminPassword') }}
+          </div>
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="form-group">
+          <label>Confirm password</label>
+
+          <div class="password-wrapper">
+            <input [type]="showConfirmPassword ? 'text' : 'password'" [name]="raConfirmNewPasswordFieldName"
+              formControlName="newAdminConfirmPassword" class="form-control"
+              [class.invalid]="isInvalid('newAdminConfirmPassword') || (replaceForm.get('newAdminConfirmPassword')?.touched && replaceForm.errors?.['passwordMismatch'])"
+              autocomplete="new-password" novalidate readonly onfocus="this.removeAttribute('readonly')" />
+
+            <button type="button" class="password-toggle" (click)="toggleConfirmPassword()"
+              [attr.aria-label]="showConfirmPassword ? 'Hide password' : 'Show password'">
+              {{ showConfirmPassword ? 'Hide' : 'Show' }}
+            </button>
+          </div>
+
+          <div class="field-error"
+            *ngIf="replaceForm.get('newAdminConfirmPassword')?.touched && (replaceForm.get('newAdminConfirmPassword')?.invalid || replaceForm.errors?.['passwordMismatch'])">
+            <ng-container *ngIf="replaceForm.get('newAdminConfirmPassword')?.errors?.['required']">
+              Please confirm the password.
+            </ng-container>
+            <ng-container *ngIf="replaceForm.get('newAdminConfirmPassword')?.errors?.['minlength']">
+              Confirm password must be at least 8 characters long.
+            </ng-container>
+            <ng-container
+              *ngIf="replaceForm.errors?.['passwordMismatch'] && !replaceForm.get('newAdminConfirmPassword')?.errors?.['required'] && !replaceForm.get('newAdminConfirmPassword')?.errors?.['minlength']">
+              Passwords do not match.
+            </ng-container>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="replace-actions">
+          <a routerLink="/admin/dashboard" class="btn btn-outline">
+            Cancel
+          </a>
+
+          <button type="submit" [disabled]="isLoading" class="btn btn-primary">
+            {{ isLoading ? 'Processing…' : 'Replace admin & sign out' }}
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </main>
+</div>

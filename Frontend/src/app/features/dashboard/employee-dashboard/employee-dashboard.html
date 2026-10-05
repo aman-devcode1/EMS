@@ -1,0 +1,147 @@
+<div *ngIf="isLoading" class="hint">Loading dashboard…</div>
+
+<ng-container *ngIf="!isLoading && employee">
+
+  <!-- WELCOME BANNER -->
+  <div class="welcome-banner">
+    <div class="welcome-text">
+      <span class="welcome-eyebrow">Employee Portal</span>
+      <h1>Welcome back, {{ employee.fullName }}</h1>
+      <p>Here's a snapshot of your employment record.</p>
+    </div>
+  </div>
+
+  <!-- STAT CARDS -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon stat-icon--hire">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line>
+          <line x1="8" y1="2" x2="8" y2="6"></line>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+        </svg>
+      </div>
+      <div class="stat-body">
+        <span class="stat-label">Hire Date</span>
+        <span class="stat-value stat-value--sm">
+          {{ employee.hireDate ? (employee.hireDate | date:'mediumDate') : '—' }}
+        </span>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon stat-icon--designation">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+          <line x1="7" y1="7" x2="7.01" y2="7"></line>
+        </svg>
+      </div>
+      <div class="stat-body">
+        <span class="stat-label">Designation</span>
+        <span class="stat-value stat-value--sm" [class.stat-value--muted]="!employee.designation">
+          {{ employee.designation || 'Not assigned' }}
+        </span>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon stat-icon--department">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <path d="M3 21h18"></path>
+          <path d="M5 21V7l8-4v18"></path>
+          <path d="M19 21V11l-6-4"></path>
+        </svg>
+      </div>
+      <div class="stat-body">
+        <span class="stat-label">Department</span>
+        <span class="stat-value stat-value--sm" [class.stat-value--muted]="!employee.department">
+          {{ employee.department || 'Not assigned' }}
+        </span>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon stat-icon--status" [class.stat-icon--status-inactive]="!employee.isActive">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+      </div>
+      <div class="stat-body">
+        <span class="stat-label">Account Status</span>
+        <span class="stat-value stat-value--sm">
+          <span class="badge" [class.badge--success]="employee.isActive" [class.badge--danger]="!employee.isActive">
+            {{ employee.isActive ? 'Active' : 'Inactive' }}
+          </span>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUICK ACTIONS -->
+  <h2 class="section-title">Quick Actions</h2>
+
+  <div class="quick-actions">
+    <a routerLink="/employee/profile" class="action-card">
+      <div class="action-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+      </div>
+      <div class="action-body">
+        <span class="action-title">View My Profile</span>
+        <span class="action-desc">See your complete personnel record</span>
+      </div>
+      <span class="action-arrow">→</span>
+    </a>
+
+    <a routerLink="/employee/profile" class="action-card">
+      <div class="action-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+      </div>
+      <div class="action-body">
+        <span class="action-title">Change Password</span>
+        <span class="action-desc">Update your account password</span>
+      </div>
+      <span class="action-arrow">→</span>
+    </a>
+  </div>
+
+  <!-- MY INFO AT A GLANCE -->
+  <h2 class="section-title">My Info at a Glance</h2>
+
+  <div class="info-strip">
+    <div class="info-item">
+      <span class="info-label">Email</span>
+      <span class="info-value">{{ employee.email || '—' }}</span>
+    </div>
+    <div class="info-item">
+      <span class="info-label">Phone</span>
+      <span class="info-value">{{ employee.phoneNumber || '—' }}</span>
+    </div>
+    <div class="info-item">
+      <span class="info-label">Present Address</span>
+      <span class="info-value">{{ employee.presentAddress || '—' }}</span>
+    </div>
+    <div class="info-item">
+      <span class="info-label">Previous Company Role</span>
+      <span class="info-value">{{ employee.previousCompanyRole || '—' }}</span>
+    </div>
+  </div>
+
+</ng-container>
+
+<div *ngIf="!isLoading && loadFailed" class="hint">
+  Unable to load your dashboard. Please refresh the page.
+</div>

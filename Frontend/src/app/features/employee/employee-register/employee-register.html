@@ -1,0 +1,146 @@
+<div class="auth-shell">
+
+  <aside class="auth-brand">
+    <span class="auth-mark">EMS</span>
+
+    <div class="auth-brand__body">
+      <h1>Employee Management System</h1>
+      <p>Create your record once — HR takes it from there.</p>
+    </div>
+
+    <div class="auth-brand__foot">
+      Internal personnel platform
+    </div>
+  </aside>
+
+  <main class="auth-panel">
+    <div class="auth-panel__inner">
+      <h2>Create your account</h2>
+      <p class="auth-form__hint">
+        We'll email a one-time code to activate it.
+      </p>
+
+      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+
+        <!-- First Name -->
+        <div class="form-group">
+          <label for="firstName">First name</label>
+          <input id="firstName" type="text" [name]="erFirstNameFieldName" formControlName="firstName" class="form-control"
+            [class.invalid]="isInvalid('firstName')" maxlength="100" autocomplete="off" novalidate readonly
+            onfocus="this.removeAttribute('readonly')" />
+          <div class="field-error" *ngIf="isInvalid('firstName')">{{ getError('firstName') }}</div>
+        </div>
+
+        <!-- Last Name -->
+        <div class="form-group">
+          <label for="lastName">Last name <span class="optional-tag">(Optional)</span></label>
+          <input id="lastName" type="text" [name]="erLastNameFieldName" formControlName="lastName" class="form-control"
+            [class.invalid]="isInvalid('lastName')" maxlength="100" autocomplete="off" novalidate readonly
+            onfocus="this.removeAttribute('readonly')" />
+          <div class="field-error" *ngIf="isInvalid('lastName')">{{ getError('lastName') }}</div>
+        </div>
+
+        <!-- Email -->
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input id="email" type="email" [name]="erEmailFieldName" formControlName="email" class="form-control"
+            [class.invalid]="isInvalid('email')" maxlength="255" autocomplete="new-password" readonly
+            onfocus="this.removeAttribute('readonly')" />
+          <div class="field-error" *ngIf="isInvalid('email')">{{ getError('email') }}</div>
+        </div>
+
+        <!-- Password -->
+        <div class="form-group">
+          <label for="password">Password</label>
+          <div class="password-wrapper">
+            <input id="password" [type]="showPassword ? 'text' : 'password'" [name]="erPasswordFieldName" formControlName="password"
+              class="form-control" [class.invalid]="isInvalid('password')" autocomplete="new-password" readonly
+              onfocus="this.removeAttribute('readonly')" />
+            <button type="button" class="password-toggle" (click)="togglePassword()"
+              [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'">
+              {{ showPassword ? 'Hide' : 'Show' }}
+            </button>
+          </div>
+          <div class="field-error" *ngIf="isInvalid('password')">{{ getError('password') }}</div>
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="form-group">
+          <label for="confirmPassword">Confirm password</label>
+          <div class="password-wrapper">
+            <input id="confirmPassword" [type]="showConfirmPassword ? 'text' : 'password'" [name]="erConfirmPasswordFieldName"
+              formControlName="confirmPassword" class="form-control"
+              [class.invalid]="isInvalid('confirmPassword') || (registerForm.get('confirmPassword')?.touched && registerForm.errors?.['passwordMismatch'])"
+              autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly')" />
+            <button type="button" class="password-toggle" (click)="toggleConfirmPassword()"
+              [attr.aria-label]="showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'">
+              {{ showConfirmPassword ? 'Hide' : 'Show' }}
+            </button>
+          </div>
+          <div class="field-error"
+            *ngIf="isInvalid('confirmPassword') || (registerForm.get('confirmPassword')?.touched && registerForm.errors?.['passwordMismatch'])">
+            <ng-container *ngIf="registerForm.get('confirmPassword')?.errors?.['required']">
+              Please confirm your password.
+            </ng-container>
+            <ng-container *ngIf="registerForm.get('confirmPassword')?.errors?.['minlength']">
+              Confirm password must be at least 8 characters long.
+            </ng-container>
+            <ng-container
+              *ngIf="registerForm.errors?.['passwordMismatch'] && !registerForm.get('confirmPassword')?.errors?.['required'] && !registerForm.get('confirmPassword')?.errors?.['minlength']">
+              Passwords do not match.
+            </ng-container>
+          </div>
+        </div>
+
+        <!-- Phone -->
+        <div class="form-group">
+          <label for="phoneNumber">Phone number</label>
+          <input id="phoneNumber" type="text" [name]="erPhoneFieldName" formControlName="phoneNumber" class="form-control"
+            [class.invalid]="isInvalid('phoneNumber')" placeholder="10-digit Indian number" inputmode="numeric"
+            maxlength="10" autocomplete="new-password" (input)="onPhoneInput($event)" readonly
+            onfocus="this.removeAttribute('readonly')" />
+          <div class="field-error" *ngIf="isInvalid('phoneNumber')">{{ getError('phoneNumber') }}</div>
+        </div>
+
+        <!-- DOB -->
+        <div class="form-group">
+          <label for="dateOfBirth">Date of birth</label>
+          <input id="dateOfBirth" type="text" [name]="erDobFieldName" formControlName="dateOfBirth" class="form-control"
+            [class.invalid]="isInvalid('dateOfBirth')" placeholder="DD-MM-YYYY" maxlength="10"
+            inputmode="numeric" autocomplete="off" novalidate (input)="onDobInput($event)" readonly
+            onfocus="this.removeAttribute('readonly')" />
+          <div class="field-error" *ngIf="isInvalid('dateOfBirth')">{{ getError('dateOfBirth') }}</div>
+        </div>
+
+        <!-- Address -->
+        <div class="form-group">
+          <label for="presentAddress">Present address <span class="optional-tag">(Optional)</span></label>
+          <input id="presentAddress" type="text" [name]="erAddressFieldName" formControlName="presentAddress" class="form-control"
+            [class.invalid]="isInvalid('presentAddress')" maxlength="500" autocomplete="off" novalidate readonly
+            onfocus="this.removeAttribute('readonly')" />
+          <div class="field-error" *ngIf="isInvalid('presentAddress')">{{ getError('presentAddress') }}</div>
+        </div>
+
+        <!-- Previous Role -->
+        <div class="form-group">
+          <label for="previousCompanyRole">Previous company role <span class="optional-tag">(Optional)</span></label>
+          <input id="previousCompanyRole" type="text" [name]="erPrevRoleFieldName" formControlName="previousCompanyRole" class="form-control"
+            [class.invalid]="isInvalid('previousCompanyRole')" maxlength="200" autocomplete="off" novalidate readonly
+            onfocus="this.removeAttribute('readonly')" />
+          <div class="field-error" *ngIf="isInvalid('previousCompanyRole')">{{ getError('previousCompanyRole') }}</div>
+        </div>
+
+        <!-- Submit -->
+        <button type="submit" [disabled]="isLoading" class="btn btn-primary mt-3">
+          {{ isLoading ? 'Registering…' : 'Register & send OTP' }}
+        </button>
+      </form>
+
+      <p class="auth-form__switch">
+        Already have an account? <a routerLink="/employee/login">Sign in</a><br />
+        Not an employee? <a routerLink="/admin/register">Register here as admin</a>
+      </p>
+
+    </div>
+  </main>
+</div>

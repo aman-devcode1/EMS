@@ -1,4 +1,10 @@
 ## ============================================================
+# Backup archives
+*.7z
+*.zip
+*.rar
+
+## ============================================================
 ## Build Outputs
 ## ============================================================
 bin/
@@ -11,7 +17,6 @@ publish/
 ## .NET User Secrets & Sensitive Config
 ## ============================================================
 appsettings.Development.json
-appsettings.Production.json
 appsettings.Local.json
 secrets.json
 *.pfx
@@ -70,3 +75,43 @@ TestResults/
 ## EF Core Migrations Backup (agar accidental duplicate ban jaye)
 ## ============================================================
 *.Designer.cs.bak
+
+
+
+
+
+
+
+
+## ============================================================
+## Frontend / Angular / Node.js
+## ============================================================
+
+# Node.js Dependencies (सबसे जरूरी - इसी की वजह से प्रोजेक्ट हल्का रहता है)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Angular Build Output (जो 'ng build' से बनता है, उसे Git में मत डालो)
+dist/
+tmp/
+temp/
+.angular/
+.cache/
+
+# Local Environment Overrides (अपनी local settings किसी और के साथ शेयर मत करो)
+src/environments/environment*.local.ts
+.env
+.env.local
+.env.*.local
+
+# Unit Test Coverage Reports (टेस्ट रिपोर्ट्स की जरूरत नहीं)
+coverage/
+*.lcov
+.nyc_output/
+
+# Angular CLI Analytics (Local cache)
+.angular/cache/
+prod dev file.txt

@@ -1,0 +1,119 @@
+<div class="auth-shell">
+  <aside class="auth-brand">
+    <span class="auth-mark">EMS</span>
+    <div class="auth-brand__body">
+      <h1>Employee Management System</h1>
+      <p>Register the first administrator record and open the registry.</p>
+    </div>
+    <div class="auth-brand__foot">Internal personnel platform</div>
+  </aside>
+
+  <main class="auth-panel">
+    <div class="auth-panel__inner">
+      <h2>Admin registration</h2>
+      <p class="auth-form__hint">We'll email a one-time code to activate the account.</p>
+
+      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" autocomplete="off" novalidate>
+
+        <!-- First Name -->
+        <div class="form-group">
+          <label>First name</label>
+          <input type="text" [name]="regFirstNameFieldName" formControlName="firstName" class="form-control"
+            [class.invalid]="isInvalid('firstName')" maxlength="100" autocomplete="off" novalidate readonly
+            onfocus="this.removeAttribute('readonly')" />
+          <div class="field-error" *ngIf="isInvalid('firstName')">
+            {{ getError('firstName') }}
+          </div>
+        </div>
+
+        <!-- Last Name (optional) -->
+        <div class="form-group">
+          <label>Last name <span class="optional-tag">(Optional)</span></label>
+          <input type="text" [name]="regLastNameFieldName" formControlName="lastName" class="form-control"
+            [class.invalid]="isInvalid('lastName')" maxlength="100" autocomplete="off" novalidate readonly
+            onfocus="this.removeAttribute('readonly')" />
+          <div class="field-error" *ngIf="isInvalid('lastName')">
+            {{ getError('lastName') }}
+          </div>
+        </div>
+
+        <!-- Email -->
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" [name]="regEmailFieldName" formControlName="email" class="form-control"
+            [class.invalid]="isInvalid('email')" maxlength="255" autocomplete="new-password" novalidate readonly
+            onfocus="this.removeAttribute('readonly')" />
+          <div class="field-error" *ngIf="isInvalid('email')">
+            {{ getError('email') }}
+          </div>
+        </div>
+
+        <!-- Phone -->
+        <div class="form-group">
+          <label>Phone number</label>
+          <input type="text" [name]="regPhoneFieldName" formControlName="phoneNumber" class="form-control"
+            [class.invalid]="isInvalid('phoneNumber')" placeholder="10-digit Indian number" inputmode="numeric"
+            maxlength="10" autocomplete="new-password" (input)="onPhoneInput($event)" novalidate readonly
+            onfocus="this.removeAttribute('readonly')" />
+          <div class="field-error" *ngIf="isInvalid('phoneNumber')">
+            {{ getError('phoneNumber') }}
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div class="form-group">
+          <label>Password</label>
+          <div class="password-wrapper">
+            <input [type]="showPassword ? 'text' : 'password'" [name]="regPasswordFieldName" formControlName="password"
+              class="form-control" [class.invalid]="isInvalid('password')" autocomplete="new-password" novalidate
+              readonly onfocus="this.removeAttribute('readonly')" />
+            <button type="button" class="password-toggle" (click)="togglePassword()"
+              [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'">
+              {{ showPassword ? 'Hide' : 'Show' }}
+            </button>
+          </div>
+          <div class="field-error" *ngIf="isInvalid('password')">
+            {{ getError('password') }}
+          </div>
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="form-group">
+          <label>Confirm password</label>
+          <div class="password-wrapper">
+            <input [type]="showConfirmPassword ? 'text' : 'password'" [name]="regConfirmPasswordFieldName"
+              formControlName="confirmPassword" class="form-control"
+              [class.invalid]="isInvalid('confirmPassword') || (registerForm.get('confirmPassword')?.touched && registerForm.errors?.['passwordMismatch'])"
+              autocomplete="new-password" novalidate readonly onfocus="this.removeAttribute('readonly')" />
+            <button type="button" class="password-toggle" (click)="toggleConfirmPassword()"
+              [attr.aria-label]="showConfirmPassword ? 'Hide password' : 'Show password'">
+              {{ showConfirmPassword ? 'Hide' : 'Show' }}
+            </button>
+          </div>
+          <div class="field-error"
+            *ngIf="registerForm.get('confirmPassword')?.touched && (registerForm.get('confirmPassword')?.invalid || registerForm.errors?.['passwordMismatch'])">
+            <ng-container *ngIf="registerForm.get('confirmPassword')?.errors?.['required']">
+              Please confirm your password.
+            </ng-container>
+            <ng-container *ngIf="registerForm.get('confirmPassword')?.errors?.['minlength']">
+              Confirm password must be at least 8 characters long.
+            </ng-container>
+            <ng-container
+              *ngIf="registerForm.errors?.['passwordMismatch'] && !registerForm.get('confirmPassword')?.errors?.['required'] && !registerForm.get('confirmPassword')?.errors?.['minlength']">
+              Passwords do not match.
+            </ng-container>
+          </div>
+        </div>
+
+        <button type="submit" [disabled]="isLoading" class="btn btn-primary mt-3">
+          {{ isLoading ? 'Registering…' : 'Register & send OTP' }}
+        </button>
+      </form>
+
+      <p class="auth-form__switch">
+        Already registered? <a routerLink="/admin/login">Sign in</a><br />
+        Not an admin? <a routerLink="/employee/register">Register here as employee</a>
+      </p>
+    </div>
+  </main>
+</div>

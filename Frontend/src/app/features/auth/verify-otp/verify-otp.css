@@ -1,0 +1,240 @@
+/* ============================================================ */
+/* SHELL                                                        */
+/* ============================================================ */
+.auth-shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+}
+
+/* ============================================================ */
+/* LEFT — BRAND PANEL                                           */
+/* ============================================================ */
+.auth-brand {
+  position: relative;
+  background: var(--ink);
+  color: #fff;
+  padding: 48px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+}
+
+.auth-brand::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 35px,
+    var(--line-on-ink) 35px,
+    var(--line-on-ink) 36px
+  );
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.auth-mark {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border: 1.5px solid var(--brass);
+  border-radius: 50%;
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-size: 1.05rem;
+  letter-spacing: 0.02em;
+  color: var(--brass);
+}
+
+.auth-brand__body { position: relative; max-width: 380px; }
+.auth-brand__body h1 { font-size: 1.9rem; color: #fff; margin-bottom: 14px; }
+.auth-brand__body p { color: rgba(255, 255, 255, 0.68); font-size: 0.95rem; }
+
+.auth-brand__foot {
+  position: relative;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.45);
+  border-top: 1px solid var(--line-on-ink);
+  padding-top: 16px;
+}
+
+/* ============================================================ */
+/* RIGHT — FORM PANEL                                           */
+/* ============================================================ */
+.auth-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 32px;
+  background: var(--paper);
+}
+
+.auth-panel__inner {
+  width: 100%;
+  max-width: 400px;
+  animation: authRise 0.5s ease-out;
+}
+
+.auth-panel__inner h2 { font-size: 1.5rem; margin-bottom: 6px; }
+
+.auth-form__hint { font-size: 0.88rem; margin-bottom: 26px; }
+.auth-form__switch { margin-top: 22px; font-size: 0.87rem; text-align: center; }
+
+/* ============================================================ */
+/* BACK BUTTON                                                  */
+/* ============================================================ */
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  padding: 6px 10px 6px 4px;
+  margin: 0 0 20px -4px;
+  color: var(--slate);
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  border-radius: 6px;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease,
+    transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.back-btn svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.back-btn:hover {
+  color: var(--ink);
+  background: rgba(22, 35, 59, 0.04);
+}
+
+.back-btn:hover svg {
+  transform: translateX(-3px);
+}
+
+.back-btn:active {
+  transform: scale(0.98);
+}
+
+.back-btn:focus-visible {
+  outline: 2px solid var(--brass);
+  outline-offset: 2px;
+}
+
+/* ============================================================ */
+/* OTP FIELD                                                    */
+/* ============================================================ */
+.otp-code-field {
+  font-family: var(--font-mono);
+  font-size: 1.6rem;
+  letter-spacing: 0.6em;
+  text-align: center;
+  padding-left: 0.6em;
+  font-variant-numeric: tabular-nums;
+}
+
+.otp-code-field::placeholder {
+  color: var(--slate-light);
+  opacity: 0.4;
+  letter-spacing: 0.15em;
+}
+
+.otp-sent-to {
+  font-size: 0.9rem;
+  color: var(--slate);
+  margin-bottom: 24px;
+}
+
+.otp-sent-to strong { color: var(--ink); font-weight: 600; }
+
+.resend-section { margin-top: 18px; text-align: center; }
+.resend-section .btn-link:disabled { color: var(--slate-light); }
+
+/* ============================================================ */
+/* VALIDATION ERROR                                             */
+/* ============================================================ */
+.form-control.invalid {
+  border-color: var(--brick);
+  box-shadow: 0 0 0 3px rgba(176, 69, 59, 0.1);
+}
+
+.field-error {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.78rem;
+  color: var(--brick);
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+/* ============================================================ */
+/* ANIMATION                                                    */
+/* ============================================================ */
+@keyframes authRise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================================ */
+/* RESPONSIVE — Tablet                                          */
+/* ============================================================ */
+@media (max-width: 860px) {
+  .auth-shell { grid-template-columns: 1fr; }
+  .auth-brand { display: none; }
+  .auth-panel { padding: 32px 20px; }
+}
+
+/* ============================================================ */
+/* RESPONSIVE — Mobile                                          */
+/* ============================================================ */
+@media (max-width: 480px) {
+  .auth-panel { padding: 24px 16px; }
+
+  .auth-panel__inner h2 { font-size: 1.35rem; }
+
+  .back-btn {
+    margin-bottom: 16px;
+    font-size: 0.82rem;
+  }
+
+  .otp-code-field {
+    font-size: 1.4rem;
+    letter-spacing: 0.5em;
+    padding-left: 0.5em;
+  }
+
+  .otp-sent-to { font-size: 0.85rem; }
+}
+
+/* ============================================================ */
+/* RESPONSIVE — Small Mobile                                    */
+/* ============================================================ */
+@media (max-width: 360px) {
+  .auth-panel { padding: 20px 14px; }
+
+  .auth-panel__inner h2 { font-size: 1.25rem; }
+
+  .back-btn span { display: none; }   /* सिर्फ arrow icon दिखेगा */
+
+  .back-btn { padding: 8px; margin-left: 0; }
+
+  .otp-code-field {
+    font-size: 1.25rem;
+    letter-spacing: 0.4em;
+    padding-left: 0.4em;
+  }
+}

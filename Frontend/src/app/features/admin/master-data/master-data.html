@@ -1,0 +1,178 @@
+<div class="page-head">
+    <h1>Master Data</h1>
+    <p>Manage departments and designations used across the system.</p>
+</div>
+
+<!-- Show Inactive Toggle -->
+<div class="master-toolbar">
+    <label class="toolbar-toggle">
+        <input type="checkbox" [ngModel]="showInactive" (ngModelChange)="onShowInactiveChange($event)" />
+        <span>Show inactive items</span>
+    </label>
+</div>
+
+<div class="master-grid">
+
+    <!-- ============================================================ -->
+    <!-- DEPARTMENTS                                                   -->
+    <!-- ============================================================ -->
+    <section class="master-card">
+        <header class="master-card__head">
+            <h2>Departments</h2>
+            <p>Organizational units — IT, HR, Sales, etc.</p>
+        </header>
+
+        <!-- Add Form -->
+        <form [formGroup]="departmentForm" (ngSubmit)="addDepartment()" class="master-add" novalidate>
+            <div class="master-add__fields">
+                <input id="new-dept-name" name="new-dept-name" type="text" formControlName="name"
+                    placeholder="New department name" [class.invalid]="isDepartmentInvalid('name')" maxlength="100"
+                    autocomplete="off" />
+
+                <input id="new-dept-desc" name="new-dept-desc" type="text" formControlName="description"
+                    placeholder="Description (optional)" maxlength="500" autocomplete="off" />
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm"
+                [disabled]="isAddingDepartment || departmentForm.invalid">
+                {{ isAddingDepartment ? 'Adding…' : '+ Add' }}
+            </button>
+            <div class="master-add__error" *ngIf="isDepartmentInvalid('name')">
+                Department name is required.
+            </div>
+        </form>
+
+        <!-- List -->
+        <div class="master-list">
+            <div class="master-hint" *ngIf="isLoadingDepartments">Loading…</div>
+            <div class="master-hint" *ngIf="!isLoadingDepartments && departments.length === 0">
+                No departments yet. Add one above.
+            </div>
+
+            <div class="master-item" *ngFor="let d of departments" [class.master-item--inactive]="!d.isActive"
+                [class.master-item--editing]="editingDepartmentId === d.id">
+
+                <!-- View Mode -->
+                <ng-container *ngIf="editingDepartmentId !== d.id">
+                    <div class="master-item__info">
+                        <span class="master-item__name">{{ d.name }}</span>
+                        <span class="master-item__desc" *ngIf="d.description">{{ d.description }}</span>
+                    </div>
+
+                    <div class="master-item__actions">
+                        <button type="button" class="icon-btn" (click)="startEditDepartment(d)" title="Edit">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                            </svg>
+                        </button>
+
+                        <label class="toggle-switch" [title]="d.isActive ? 'Deactivate' : 'Activate'">
+                            <input type="checkbox" [checked]="d.isActive" [disabled]="processingToggleId === d.id"
+                                (change)="toggleDepartment(d)" />
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </ng-container>
+
+                <!-- Edit Mode -->
+                <form *ngIf="editingDepartmentId === d.id" [formGroup]="editDepartmentForm"
+                    (ngSubmit)="saveEditDepartment()" class="master-item__edit" novalidate>
+                    <input id="edit-dept-name" name="edit-dept-name" type="text" formControlName="name" maxlength="100"
+                        placeholder="Name" autocomplete="off" />
+                    <input id="edit-dept-desc" name="edit-dept-desc" type="text" formControlName="description"
+                        maxlength="500" placeholder="Description" autocomplete="off" />
+                    <div class="master-item__edit-actions">
+                        <button type="button" class="btn btn-outline btn-sm"
+                            (click)="cancelEditDepartment()">Cancel</button>
+                        <button type="submit" class="btn btn-primary btn-sm" [disabled]="isSavingEdit">
+                            {{ isSavingEdit ? 'Saving…' : 'Save' }}
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- DESIGNATIONS                                                  -->
+    <!-- ============================================================ -->
+    <section class="master-card">
+        <header class="master-card__head">
+            <h2>Designations</h2>
+            <p>Job titles — Developer, Manager, Team Lead, etc.</p>
+        </header>
+
+        <!-- Add Form -->
+        <form [formGroup]="designationForm" (ngSubmit)="addDesignation()" class="master-add" novalidate>
+            <div class="master-add__fields">
+                <input id="new-desig-name" name="new-desig-name" type="text" formControlName="name"
+                    placeholder="New designation name" [class.invalid]="isDesignationInvalid('name')" maxlength="100"
+                    autocomplete="off" />
+
+                <input id="new-desig-desc" name="new-desig-desc" type="text" formControlName="description"
+                    placeholder="Description (optional)" maxlength="500" autocomplete="off" />
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm"
+                [disabled]="isAddingDesignation || designationForm.invalid">
+                {{ isAddingDesignation ? 'Adding…' : '+ Add' }}
+            </button>
+            <div class="master-add__error" *ngIf="isDesignationInvalid('name')">
+                Designation name is required.
+            </div>
+        </form>
+
+        <!-- List -->
+        <div class="master-list">
+            <div class="master-hint" *ngIf="isLoadingDesignations">Loading…</div>
+            <div class="master-hint" *ngIf="!isLoadingDesignations && designations.length === 0">
+                No designations yet. Add one above.
+            </div>
+
+            <div class="master-item" *ngFor="let d of designations" [class.master-item--inactive]="!d.isActive"
+                [class.master-item--editing]="editingDesignationId === d.id">
+
+                <ng-container *ngIf="editingDesignationId !== d.id">
+                    <div class="master-item__info">
+                        <span class="master-item__name">{{ d.name }}</span>
+                        <span class="master-item__desc" *ngIf="d.description">{{ d.description }}</span>
+                    </div>
+
+                    <div class="master-item__actions">
+                        <button type="button" class="icon-btn" (click)="startEditDesignation(d)" title="Edit">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                            </svg>
+                        </button>
+
+                        <label class="toggle-switch" [title]="d.isActive ? 'Deactivate' : 'Activate'">
+                            <input type="checkbox" [checked]="d.isActive" [disabled]="processingToggleId === d.id"
+                                (change)="toggleDesignation(d)" />
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </ng-container>
+
+                <form *ngIf="editingDesignationId === d.id" [formGroup]="editDesignationForm"
+                    (ngSubmit)="saveEditDesignation()" class="master-item__edit" novalidate>
+                    <input id="edit-desig-name" name="edit-desig-name" type="text" formControlName="name"
+                        maxlength="100" placeholder="Name" autocomplete="off" />
+                    <input id="edit-desig-desc" name="edit-desig-desc" type="text" formControlName="description"
+                        maxlength="500" placeholder="Description" autocomplete="off" />
+                    <div class="master-item__edit-actions">
+                        <button type="button" class="btn btn-outline btn-sm"
+                            (click)="cancelEditDesignation()">Cancel</button>
+                        <button type="submit" class="btn btn-primary btn-sm" [disabled]="isSavingEdit">
+                            {{ isSavingEdit ? 'Saving…' : 'Save' }}
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </section>
+
+</div>

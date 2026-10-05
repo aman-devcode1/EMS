@@ -1,0 +1,235 @@
+<div *ngIf="isLoading" class="hint">Loading employee details…</div>
+
+<ng-container *ngIf="!isLoading && employee">
+
+    <!-- HEAD ROW -->
+    <div class="detail-head">
+        <div class="detail-head__text">
+            <a routerLink="/admin/employees" class="back-btn" aria-label="Back to list">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+                <span>Back to Employees</span>
+            </a>
+            <h1>Employee Details</h1>
+            <p>Complete personnel record</p>
+        </div>
+
+        <!-- ACTION BUTTONS -->
+        <div class="detail-head__actions" *ngIf="viewMode === 'details'">
+            <button type="button" class="btn btn-primary" (click)="openEditForm()">
+                Edit Professional Details
+            </button>
+        </div>
+    </div>
+
+    <!-- PROFILE CARD -->
+    <div class="profile-card">
+
+        <!-- HERO -->
+        <div class="profile-hero">
+            <div class="profile-hero__main">
+                <div class="profile-avatar">{{ getInitials() }}</div>
+                <div class="profile-hero__text">
+                    <h2>{{ employee.fullName }}</h2>
+                    <div class="profile-hero__tags">
+                        <span class="profile-role">{{ employee.role || 'Employee' }}</span>
+                        <span class="badge" [class.badge--success]="employee.isActive"
+                            [class.badge--danger]="!employee.isActive">
+                            {{ employee.isActive ? 'Active' : 'Inactive' }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="profile-hero__aside">
+                <h3>{{ getDesignationName() || 'Designation not assigned' }}</h3>
+                <p>{{ getDepartmentName() || 'Department not assigned' }}</p>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- VIEW MODE: DETAILS                                            -->
+        <!-- ============================================================ -->
+        <div class="profile-body" *ngIf="viewMode === 'details'">
+            <div class="info-row">
+                <span class="info-label">Full Name</span>
+                <span class="info-value">{{ employee.fullName || '—' }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Email</span>
+                <span class="info-value">{{ employee.email || '—' }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Phone Number</span>
+                <span class="info-value">{{ employee.phoneNumber || '—' }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Salary</span>
+                <span class="info-value">
+                    {{ employee.salary ? (employee.salary | currency:'INR') : 'Not provided' }}
+                </span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Hire Date</span>
+                <span class="info-value">
+                    {{ employee.hireDate ? (employee.hireDate | date:'mediumDate') : '—' }}
+                </span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Date of Birth</span>
+                <span class="info-value">
+                    {{ employee.dateOfBirth ? (employee.dateOfBirth | date:'mediumDate') : '—' }}
+                </span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Present Address</span>
+                <span class="info-value">{{ employee.presentAddress || '—' }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Previous Company Role</span>
+                <span class="info-value">{{ employee.previousCompanyRole || '—' }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Designation</span>
+                <span class="info-value" [class.info-value--muted]="!getDesignationName()">
+                    {{ getDesignationName() || 'Not assigned' }}
+                </span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Department</span>
+                <span class="info-value" [class.info-value--muted]="!getDepartmentName()">
+                    {{ getDepartmentName() || 'Not assigned' }}
+                </span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Account Status</span>
+                <span class="info-value">
+                    <span class="badge" [class.badge--success]="employee.isActive"
+                        [class.badge--danger]="!employee.isActive">
+                        {{ employee.isActive ? 'Active' : 'Inactive' }}
+                    </span>
+                </span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Member Since</span>
+                <span class="info-value">
+                    {{ employee.createdAt ? (employee.createdAt | date:'mediumDate') : '—' }}
+                </span>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- EDIT MODE: PROFESSIONAL ONLY                                  -->
+        <!-- ============================================================ -->
+        <div class="profile-body profile-body--form" *ngIf="viewMode === 'edit'">
+            <form [formGroup]="editForm" (ngSubmit)="onSaveProfessional()" novalidate>
+
+                <!-- SECTION 1: PROFESSIONAL (EDITABLE) -->
+                <div class="section-head">
+                    <h3>Professional Information</h3>
+                    <span class="section-badge section-badge--editable">Editable</span>
+                </div>
+
+                <div class="form-group">
+                    <label [attr.for]="fDept">Department</label>
+                    <select [attr.id]="fDept" [attr.name]="fDept" class="form-control" formControlName="departmentId">
+                        <option [ngValue]="null">— Not assigned —</option>
+                        <option *ngFor="let d of departments" [ngValue]="d.id">{{ d.name }}</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label [attr.for]="fDesig">Designation</label>
+                    <select [attr.id]="fDesig" [attr.name]="fDesig" class="form-control"
+                        formControlName="designationId">
+                        <option [ngValue]="null">— Not assigned —</option>
+                        <option *ngFor="let d of designations" [ngValue]="d.id">{{ d.name }}</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label [attr.for]="fSalary">Salary (INR)</label>
+                    <input [attr.id]="fSalary" [attr.name]="fSalary" type="number" class="form-control"
+                        formControlName="salary" [class.invalid]="isInvalid('salary')" placeholder="e.g. 50000"
+                        min="10000" step="1000" />
+                    <div class="field-error" *ngIf="isInvalid('salary')">{{ getError('salary') }}</div>
+                </div>
+
+                <div class="form-group">
+                    <label [attr.for]="fPrevRole">
+                        Previous Company Role <span class="optional-tag">(Optional)</span>
+                    </label>
+                    <input [attr.id]="fPrevRole" [attr.name]="fPrevRole" type="text" class="form-control"
+                        formControlName="previousCompanyRole" [class.invalid]="isInvalid('previousCompanyRole')"
+                        maxlength="200" placeholder="e.g. Senior Developer" />
+                    <div class="field-error" *ngIf="isInvalid('previousCompanyRole')">{{ getError('previousCompanyRole')
+                        }}</div>
+                </div>
+
+                <!-- SECTION 2: READ-ONLY INFO -->
+                <div class="section-head section-head--readonly">
+                    <h3>Read-only Information</h3>
+                    <span class="section-badge section-badge--locked">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                        Locked
+                    </span>
+                </div>
+
+                <div class="locked-list">
+                    <div class="locked-item">
+                        <span class="locked-label">Full Name</span>
+                        <span class="locked-value">{{ employee.fullName }}</span>
+                    </div>
+                    <div class="locked-item">
+                        <span class="locked-label">Email</span>
+                        <span class="locked-value">{{ employee.email }}</span>
+                    </div>
+                    <div class="locked-item">
+                        <span class="locked-label">Phone</span>
+                        <span class="locked-value">{{ employee.phoneNumber || '—' }}</span>
+                    </div>
+                    <div class="locked-item">
+                        <span class="locked-label">Date of Birth</span>
+                        <span class="locked-value">{{ employee.dateOfBirth ? (employee.dateOfBirth | date:'mediumDate')
+                            : '—' }}</span>
+                    </div>
+                    <div class="locked-item">
+                        <span class="locked-label">Present Address</span>
+                        <span class="locked-value">{{ employee.presentAddress || '—' }}</span>
+                    </div>
+                    <div class="locked-item">
+                        <span class="locked-label">Hire Date</span>
+                        <span class="locked-value">{{ employee.hireDate ? (employee.hireDate | date:'mediumDate') : '—'
+                            }}</span>
+                    </div>
+                    <div class="locked-item">
+                        <span class="locked-label">Account Status</span>
+                        <span class="locked-value">{{ employee.isActive ? 'Active' : 'Inactive' }}</span>
+                    </div>
+                </div>
+
+                <!-- ACTIONS -->
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" (click)="cancelEdit()">Cancel</button>
+                    <button type="submit" class="btn btn-primary" [disabled]="isSaving">
+                        {{ isSaving ? 'Saving…' : 'Save Changes' }}
+                    </button>
+                </div>
+
+            </form>
+        </div>
+
+    </div>
+
+</ng-container>
+
+<div *ngIf="!isLoading && loadFailed" class="hint">
+    Unable to load employee details. Please go back and try again.
+</div>

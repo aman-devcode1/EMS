@@ -1,0 +1,262 @@
+/* ============================================================ */
+/* OVERLAY (mobile)                                             */
+/* ============================================================ */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 998;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+.sidebar-overlay.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ============================================================ */
+/* SIDEBAR                                                      */
+/* ============================================================ */
+.sidebar {
+  width: 260px;
+  flex-shrink: 0;
+  background: linear-gradient(180deg, #16233b 0%, #0f1a2e 100%);
+  color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  flex-direction: column;
+  padding: 24px 0;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ============================================================ */
+/* BRAND                                                        */
+/* ============================================================ */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 24px 24px 24px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+.brand-mark {
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--brass);
+  border-radius: 50%;
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--brass);
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.brand-title {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  color: #fff;
+  font-weight: 600;
+}
+
+.brand-sub {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 2px;
+}
+
+.close-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 4px;
+  margin-left: auto;
+}
+.close-btn svg { width: 20px; height: 20px; }
+.close-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+/* ============================================================ */
+/* NAV SCROLL CONTAINER                                         */
+/* ============================================================ */
+.nav-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Custom scrollbar */
+.nav-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.nav-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.nav-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+.nav-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* ============================================================ */
+/* NAV LIST                                                     */
+/* ============================================================ */
+.nav-list {
+  list-style: none;
+  margin: 0;
+  padding: 8px 12px 24px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* ============================================================ */
+/* SECTION HEADER                                               */
+/* ============================================================ */
+.section-header {
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.35);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 600;
+  padding: 16px 14px 6px 14px;
+  margin-top: 4px;
+  font-family: var(--font-sans);
+}
+.section-header:first-child {
+  padding-top: 6px;
+}
+
+/* ============================================================ */
+/* NAV LINKS                                                    */
+/* ============================================================ */
+.nav-list li a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.92rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background-color 0.15s ease, color 0.15s ease;
+  position: relative;
+}
+
+.nav-list li a:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  text-decoration: none;
+}
+
+.nav-list li a.active {
+  background: rgba(185, 134, 61, 0.15);
+  color: #fff;
+  font-weight: 600;
+}
+
+.nav-list li a.active .nav-icon {
+  color: var(--brass);
+}
+
+.nav-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.6);
+  transition: color 0.15s ease;
+}
+
+.nav-list li a:hover .nav-icon {
+  color: #fff;
+}
+
+/* ============================================================ */
+/* COMING SOON LINKS                                            */
+/* ============================================================ */
+.nav-list li a.coming-soon {
+  color: rgba(255, 255, 255, 0.45);
+  cursor: pointer;
+}
+.nav-list li a.coming-soon:hover {
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.03);
+}
+.nav-list li a.coming-soon:hover .nav-icon {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* ============================================================ */
+/* BADGE                                                        */
+/* ============================================================ */
+.badge {
+  margin-left: auto;
+  font-size: 0.62rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--brass);
+  background: rgba(185, 134, 61, 0.15);
+  padding: 3px 7px;
+  border-radius: 10px;
+  line-height: 1;
+  border: 1px solid rgba(185, 134, 61, 0.25);
+}
+
+/* ============================================================ */
+/* TABLET & MOBILE — drawer                                     */
+/* ============================================================ */
+@media (max-width: 1024px) {
+  .sidebar-overlay { display: block; }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 999;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .close-btn {
+    display: flex;
+  }
+}
+
+/* ============================================================ */
+/* SMALL MOBILE                                                 */
+/* ============================================================ */
+@media (max-width: 380px) {
+  .sidebar {
+    width: 85vw;
+  }
+}

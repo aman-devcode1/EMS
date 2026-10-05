@@ -1,0 +1,288 @@
+<div *ngIf="isLoading" class="hint">Loading profile…</div>
+
+<ng-container *ngIf="!isLoading">
+
+  <div class="profile-head">
+    <div class="profile-head__text">
+      <h1>My Profile</h1>
+      <p>View and manage your account details.</p>
+    </div>
+
+    <div class="profile-head__actions">
+      <button type="button" class="btn btn-primary" [disabled]="viewMode === 'details'" (click)="showDetails()">
+        Profile Detail
+      </button>
+      <button type="button" class="btn btn-primary" [disabled]="viewMode === 'edit'" (click)="openEditForm()">
+        Edit Profile
+      </button>
+      <button type="button" class="btn btn-primary" [disabled]="viewMode === 'password'" (click)="openPasswordForm()">
+        Change Password
+      </button>
+    </div>
+  </div>
+
+  <div class="profile-card">
+
+    <!-- HERO -->
+    <div class="profile-hero">
+      <div class="profile-hero__main">
+        <div class="profile-avatar">{{ getInitials() }}</div>
+        <div class="profile-hero__text">
+          <h2>{{ getFullName() }}</h2>
+          <div class="profile-hero__tags">
+            <span class="profile-role">{{ profile.role || 'Employee' }}</span>
+            <span class="badge"
+              [class.badge--success]="profile.isActive"
+              [class.badge--danger]="!profile.isActive">
+              {{ profile.isActive ? 'Active' : 'Inactive' }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-hero__aside">
+        <ng-container *ngIf="viewMode === 'details'">
+          <h3>Profile Detail</h3>
+          <p>Your personnel record</p>
+        </ng-container>
+        <ng-container *ngIf="viewMode === 'edit'">
+          <h3>Edit Profile</h3>
+          <p>Update your personal information</p>
+        </ng-container>
+        <ng-container *ngIf="viewMode === 'password'">
+          <h3>Change Password</h3>
+          <p>Your current password is required to set a new one.</p>
+        </ng-container>
+      </div>
+    </div>
+
+    <!-- MODE 1: DETAILS -->
+    <div class="profile-body" *ngIf="viewMode === 'details'">
+      <div class="info-row">
+        <span class="info-label">Full Name</span>
+        <span class="info-value">{{ profile.fullName || '—' }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Email</span>
+        <span class="info-value">{{ profile.email || '—' }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Phone Number</span>
+        <span class="info-value">{{ profile.phoneNumber || '—' }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Salary</span>
+        <span class="info-value">{{ profile.salary ? (profile.salary | currency:'INR') : 'Not provided' }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Hire Date</span>
+        <span class="info-value">{{ profile.hireDate ? (profile.hireDate | date:'mediumDate') : '—' }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Date of Birth</span>
+        <span class="info-value">{{ profile.dateOfBirth ? (profile.dateOfBirth | date:'mediumDate') : '—' }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Present Address</span>
+        <span class="info-value">{{ profile.presentAddress || '—' }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Previous Company Role</span>
+        <span class="info-value">{{ profile.previousCompanyRole || '—' }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Designation</span>
+        <span class="info-value" [class.info-value--muted]="!profile.designation">
+          {{ profile.designation || 'Not assigned' }}
+        </span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Department</span>
+        <span class="info-value" [class.info-value--muted]="!profile.department">
+          {{ profile.department || 'Not assigned' }}
+        </span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Account Status</span>
+        <span class="info-value">
+          <span class="badge"
+            [class.badge--success]="profile.isActive"
+            [class.badge--danger]="!profile.isActive">
+            {{ profile.isActive ? 'Active' : 'Inactive' }}
+          </span>
+        </span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Member Since</span>
+        <span class="info-value">{{ profile.createdAt ? (profile.createdAt | date:'mediumDate') : '—' }}</span>
+      </div>
+    </div>
+
+    <!-- MODE 2: EDIT PROFILE -->
+    <div class="profile-body profile-body--form" *ngIf="viewMode === 'edit'">
+      <form [formGroup]="profileForm" (ngSubmit)="onSaveProfile()" novalidate>
+
+        <div class="form-group">
+          <label>First Name</label>
+          <input type="text" [name]="profFirstNameFieldName" class="form-control" formControlName="firstName"
+            [class.invalid]="isProfileInvalid('firstName')" maxlength="100" autocomplete="off" novalidate readonly
+            onfocus="this.removeAttribute('readonly')" />
+          <div class="field-error" *ngIf="isProfileInvalid('firstName')">{{ getProfileError('firstName') }}</div>
+        </div>
+
+        <div class="form-group">
+          <label>Last Name <span class="optional-tag">(Optional)</span></label>
+          <input type="text" [name]="profLastNameFieldName" class="form-control" formControlName="lastName"
+            [class.invalid]="isProfileInvalid('lastName')" maxlength="100" autocomplete="off" novalidate readonly
+            onfocus="this.removeAttribute('readonly')" />
+          <div class="field-error" *ngIf="isProfileInvalid('lastName')">{{ getProfileError('lastName') }}</div>
+        </div>
+
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" [name]="profEmailFieldName" class="form-control" formControlName="email"
+            [class.invalid]="isProfileInvalid('email')" maxlength="255" autocomplete="new-password" novalidate readonly
+            onfocus="this.removeAttribute('readonly')" />
+          <div class="field-error" *ngIf="isProfileInvalid('email')">{{ getProfileError('email') }}</div>
+          <small class="field-hint" *ngIf="!isProfileInvalid('email')">
+            Changing email will sign you out of all devices.
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label>Phone Number</label>
+          <input type="text" [name]="profPhoneFieldName" class="form-control" formControlName="phoneNumber"
+            [class.invalid]="isProfileInvalid('phoneNumber')" maxlength="10" inputmode="numeric"
+            autocomplete="new-password" (input)="onProfilePhoneInput($event)" novalidate readonly
+            onfocus="this.removeAttribute('readonly')" />
+          <div class="field-error" *ngIf="isProfileInvalid('phoneNumber')">{{ getProfileError('phoneNumber') }}</div>
+        </div>
+
+        <div class="form-group">
+          <label>Date of Birth <span class="optional-tag">(Optional)</span></label>
+          <input type="date" [name]="profDobFieldName" class="form-control" formControlName="dateOfBirth"
+            [class.invalid]="isProfileInvalid('dateOfBirth')" [attr.min]="minDob" [attr.max]="maxDob"
+            autocomplete="off" novalidate readonly onfocus="this.removeAttribute('readonly')" />
+          <div class="field-error" *ngIf="isProfileInvalid('dateOfBirth')">{{ getProfileError('dateOfBirth') }}</div>
+        </div>
+
+        <div class="form-group">
+          <label>Present Address <span class="optional-tag">(Optional)</span></label>
+          <textarea class="form-control" [name]="profAddressFieldName" formControlName="presentAddress"
+            [class.invalid]="isProfileInvalid('presentAddress')" rows="3" maxlength="500" autocomplete="off" novalidate
+            readonly onfocus="this.removeAttribute('readonly')"></textarea>
+          <div class="field-error" *ngIf="isProfileInvalid('presentAddress')">{{ getProfileError('presentAddress') }}</div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-outline" (click)="showDetails()">Cancel</button>
+          <button type="submit" class="btn btn-primary" [disabled]="isSaving">
+            {{ isSaving ? 'Saving…' : 'Save Changes' }}
+          </button>
+        </div>
+
+      </form>
+    </div>
+
+    <!-- MODE 3: CHANGE PASSWORD -->
+    <div class="profile-body profile-body--form" *ngIf="viewMode === 'password'">
+      <form [formGroup]="passwordForm" (ngSubmit)="onChangePassword()" novalidate>
+
+        <div class="form-group">
+          <label>Current Password</label>
+          <div class="password-wrap">
+            <input [type]="showCurrentPassword ? 'text' : 'password'" [name]="profCurrentPasswordFieldName"
+              class="form-control" formControlName="currentPassword"
+              [class.invalid]="isPasswordInvalid('currentPassword')" autocomplete="current-password" novalidate readonly
+              onfocus="this.removeAttribute('readonly')" />
+            <button type="button" class="eye-btn" (click)="toggleCurrentPassword()"
+              [attr.aria-label]="showCurrentPassword ? 'Hide password' : 'Show password'">
+              <svg *ngIf="!showCurrentPassword" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+              <svg *ngIf="showCurrentPassword" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                <line x1="1" y1="1" x2="23" y2="23"></line>
+              </svg>
+            </button>
+          </div>
+          <div class="field-error" *ngIf="isPasswordInvalid('currentPassword')">{{ getPasswordError('currentPassword') }}</div>
+        </div>
+
+        <div class="form-group">
+          <label>New Password</label>
+          <div class="password-wrap">
+            <input [type]="showNewPassword ? 'text' : 'password'" [name]="profNewPasswordFieldName" class="form-control"
+              formControlName="newPassword" [class.invalid]="isPasswordInvalid('newPassword')"
+              autocomplete="new-password" novalidate readonly onfocus="this.removeAttribute('readonly')" />
+            <button type="button" class="eye-btn" (click)="toggleNewPassword()"
+              [attr.aria-label]="showNewPassword ? 'Hide password' : 'Show password'">
+              <svg *ngIf="!showNewPassword" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+              <svg *ngIf="showNewPassword" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                <line x1="1" y1="1" x2="23" y2="23"></line>
+              </svg>
+            </button>
+          </div>
+          <div class="field-error"
+            *ngIf="isPasswordInvalid('newPassword') || (passwordForm.get('newPassword')?.touched && passwordForm.errors?.['samePassword'])">
+            {{ getPasswordError('newPassword') }}
+          </div>
+          <small class="field-hint" *ngIf="!isPasswordInvalid('newPassword')">At least 8 characters.</small>
+        </div>
+
+        <div class="form-group">
+          <label>Confirm New Password</label>
+          <div class="password-wrap">
+            <input [type]="showConfirmPassword ? 'text' : 'password'" [name]="profConfirmNewPasswordFieldName"
+              class="form-control" formControlName="confirmNewPassword"
+              [class.invalid]="isPasswordInvalid('confirmNewPassword') || (passwordForm.get('confirmNewPassword')?.touched && passwordForm.errors?.['passwordMismatch'])"
+              autocomplete="new-password" novalidate readonly onfocus="this.removeAttribute('readonly')" />
+            <button type="button" class="eye-btn" (click)="toggleConfirmPassword()"
+              [attr.aria-label]="showConfirmPassword ? 'Hide password' : 'Show password'">
+              <svg *ngIf="!showConfirmPassword" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+              <svg *ngIf="showConfirmPassword" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                <line x1="1" y1="1" x2="23" y2="23"></line>
+              </svg>
+            </button>
+          </div>
+          <div class="field-error"
+            *ngIf="passwordForm.get('confirmNewPassword')?.touched && (passwordForm.get('confirmNewPassword')?.invalid || passwordForm.errors?.['passwordMismatch'])">
+            <ng-container *ngIf="passwordForm.get('confirmNewPassword')?.errors?.['required']">
+              Please confirm your new password.
+            </ng-container>
+            <ng-container *ngIf="passwordForm.errors?.['passwordMismatch'] && !passwordForm.get('confirmNewPassword')?.errors?.['required']">
+              Passwords do not match.
+            </ng-container>
+          </div>
+        </div>
+
+        <small class="field-hint">You'll be signed out of all devices after this change.</small>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-outline" (click)="showDetails()">Cancel</button>
+          <button type="submit" class="btn btn-primary" [disabled]="isChangingPassword">
+            {{ isChangingPassword ? 'Updating…' : 'Update Password' }}
+          </button>
+        </div>
+
+      </form>
+    </div>
+
+  </div>
+
+</ng-container>

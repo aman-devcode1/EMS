@@ -1,0 +1,32 @@
+<div class="data-table-wrap">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th *ngFor="let col of columns" [class.sortable]="col.sortable" (click)="onSort(col)">
+                    {{ col.label }}
+                    <span class="sort-icon" *ngIf="col.sortable">
+                        <ng-container [ngSwitch]="sortKey === col.key ? sortDirection : null">
+                            <ng-container *ngSwitchCase="'asc'"> ↑ </ng-container>
+                            <ng-container *ngSwitchCase="'desc'"> ↓ </ng-container>
+                            <ng-container *ngSwitchDefault> ⥮ </ng-container>
+                        </ng-container>
+                    </span>
+                </th>
+                <th *ngIf="rowActionsTemplate" class="action-clo"> Actions </th>
+            </tr>
+        </thead>
+        
+
+        <tbody>
+            <tr *ngFor="let row of data">
+                <td *ngFor="let col of columns"> {{ row[col.key] }} </td>
+                <td *ngIf="rowActionsTemplate" class="actions-col">
+                    <ng-container *ngTemplateOutlet="rowActionsTemplate; context: { $implicit: row }"></ng-container>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="table-state" *ngIf="loading"> Loading... </div>
+    <div class="table-state" *ngIf="!loading && !data.length"> {{ emptyMessage }} </div>
+</div>

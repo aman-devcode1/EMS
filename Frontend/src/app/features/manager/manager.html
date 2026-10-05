@@ -1,0 +1,48 @@
+<div class="page-head">
+  <h1>Managers</h1>
+  <p>All managers in the organization.</p>
+</div>
+
+<div *ngIf="isLoading" class="hint">Loading…</div>
+
+<div *ngIf="!isLoading && managers.length === 0" class="hint">No managers yet.</div>
+
+<div class="table-wrap" *ngIf="!isLoading && managers.length > 0">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Phone</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let m of managers">
+        <td data-label="Name">{{ m.fullName }}</td>
+        <td data-label="Email">{{ m.email }}</td>
+        <td data-label="Phone">{{ m.phoneNumber ?? '—' }}</td>
+        <td data-label="Action">
+          <button
+            type="button"
+            class="remove-btn"
+            [disabled]="processingUserId === m.userId"
+            (click)="openDemoteDialog(m)">
+            {{ processingUserId === m.userId ? 'Removing…' : 'Remove from Manager' }}
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<app-confirm-dialog
+  [isOpen]="dialogOpen"
+  title="Remove from Manager"
+  [message]="dialogMessage"
+  [boldText]="dialogBoldText"
+  confirmText="Remove"
+  variant="danger"
+  (confirmed)="onDialogConfirm()"
+  (cancelled)="onDialogCancel()">
+</app-confirm-dialog>

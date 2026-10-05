@@ -1,0 +1,65 @@
+/* ============================================================ */
+/* LAYOUT CONTAINER — Fixed viewport, no page scroll            */
+/* ============================================================ */
+.layout-container {
+  display: flex;
+  height: 100vh;          /* 🔥 fixed height (min-height नहीं) */
+  overflow: hidden;       /* 🔥 page-level scroll block */
+}
+
+/* Sidebar — fixed width, अपना scroll */
+app-sidebar {
+  display: flex;
+  flex-shrink: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Main area — flex column, content area scrollable */
+.main-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Content — सिर्फ यह scroll होगा */
+.content {
+  flex: 1;
+  padding: 32px 40px;
+  background: var(--paper);
+  overflow-y: auto;       /* 🔥 independent scroll */
+  overflow-x: hidden;
+}
+
+/* Custom scrollbar (subtle, theme-consistent) */
+.content::-webkit-scrollbar {
+  width: 8px;
+}
+.content::-webkit-scrollbar-track {
+  background: transparent;
+}
+.content::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border-radius: 4px;
+}
+.content::-webkit-scrollbar-thumb:hover {
+  background: var(--slate-light);
+}
+
+/* ============================================================ */
+/* RESPONSIVE                                                   */
+/* ============================================================ */
+@media (max-width: 1024px) {
+  .content {
+    padding: 24px 20px;
+  }
+}
+
+@media (max-width: 640px) {
+  .content {
+    padding: 20px 14px;
+  }
+}

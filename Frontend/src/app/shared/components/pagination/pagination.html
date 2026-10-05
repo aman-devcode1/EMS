@@ -1,0 +1,12 @@
+<nav class="pagination" *ngIf="totalPages > 1" aria-label="Pagination">
+    <button type="button" class="page-btn page-nav" [disabled]="!hasPreviousPage" (click)="previous()"> ← Prev </button>
+
+    <ng-container *ngFor="let p of pagesWithGaps">
+        <span *ngIf="p === 'gap'" class="page-gap">...</span>
+        <button *ngIf="p !== 'gap'" type="button" class="page-btn" [class.active]="p === pageNumber" (click)="goTo(p)">
+            {{ p }}
+        </button>
+    </ng-container>
+
+    <button type="button" class="page-btn page-nav" [disabled]="!hasNextPage" (click)="next()"> Next → </button>
+</nav>

@@ -1,0 +1,107 @@
+<div class="auth-shell">
+  <aside class="auth-brand">
+    <span class="auth-mark">EMS</span>
+    <div class="auth-brand__body">
+      <h1>Employee Management System</h1>
+      <p>The administrator registry — manage hires, roles and access from one place.</p>
+    </div>
+    <div class="auth-brand__foot">Internal personnel platform</div>
+  </aside>
+
+  <main class="auth-panel">
+    <div class="auth-panel__inner">
+      <h2>Admin sign-in</h2>
+      <p class="auth-form__hint">Enter your credentials — a one-time code follows by email.</p>
+
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" autocomplete="off" novalidate>
+
+        <!-- ============================================ -->
+        <!-- EMAIL                                        -->
+        <!-- ============================================ -->
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input
+            id="email"
+            [name]="emailFieldName"
+            type="text"
+            formControlName="email"
+            class="form-control"
+            [class.invalid]="isInvalid('email')"
+            placeholder="you@company.com"
+            autocomplete="off"
+            readonly
+            onfocus="this.removeAttribute('readonly')" />
+          <div class="field-error" *ngIf="isInvalid('email')">
+            {{ getError('email') }}
+          </div>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- PASSWORD                                     -->
+        <!-- ============================================ -->
+        <div class="form-group">
+          <label for="password">Password</label>
+          <div class="password-wrapper">
+            <input
+              id="password"
+              [name]="passwordFieldName"
+              [type]="showPassword ? 'text' : 'password'"
+              formControlName="password"
+              class="form-control"
+              [class.invalid]="isInvalid('password')"
+              autocomplete="off"
+              readonly
+              onfocus="this.removeAttribute('readonly')" />
+            <button
+              type="button"
+              class="password-toggle"
+              (click)="togglePassword()"
+              [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'">
+              {{ showPassword ? 'Hide' : 'Show' }}
+            </button>
+          </div>
+          <div class="field-error" *ngIf="isInvalid('password')">
+            {{ getError('password') }}
+          </div>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- PHONE                                        -->
+        <!-- ============================================ -->
+        <div class="form-group">
+          <label for="phoneNumber">Phone number</label>
+          <input
+            id="phoneNumber"
+            [name]="phoneFieldName"
+            type="text"
+            formControlName="phoneNumber"
+            class="form-control"
+            [class.invalid]="isInvalid('phoneNumber')"
+            placeholder="10-digit Indian number"
+            inputmode="numeric"
+            maxlength="10"
+            autocomplete="off"
+            readonly
+            onfocus="this.removeAttribute('readonly')"
+            (input)="onPhoneInput($event)" />
+          <div class="field-error" *ngIf="isInvalid('phoneNumber')">
+            {{ getError('phoneNumber') }}
+          </div>
+        </div>
+
+        <div class="auth-form__forgot">
+          <a routerLink="/forgot-password">Forgot password?</a>
+        </div>
+
+        <button type="submit" [disabled]="isLoading" class="btn btn-primary mt-3">
+          {{ isLoading ? 'Sending OTP…' : 'Sign in & send OTP' }}
+        </button>
+      </form>
+
+      <p class="auth-form__switch">
+        New administrator? <a routerLink="/admin/register">Register here</a><br />
+        Not an admin? <a routerLink="/employee/login">Sign in as employee</a>
+      </p>
+    </div>
+  </main>
+</div>

@@ -1,0 +1,9 @@
+<div class="layout-container">
+  <app-sidebar [isOpen]="sidebarOpen" (requestClose)="onSidebarClose()"></app-sidebar>
+  <div class="main-area">
+    <app-navbar (menuToggle)="onMenuToggle()"></app-navbar>
+    <div class="content">
+      <router-outlet></router-outlet>
+    </div>
+  </div>
+</div>

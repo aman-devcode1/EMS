@@ -1,0 +1,86 @@
+<div class="page-head">
+  <h1>Employees</h1>
+  <p>All employees. Click a row to view details.</p>
+</div>
+
+<!-- Loading -->
+<div *ngIf="isLoading" class="hint">Loading…</div>
+
+<!-- Empty -->
+<div *ngIf="!isLoading && employees.length === 0" class="hint">No employees yet.</div>
+
+<!-- Table -->
+<div class="table-wrap" *ngIf="!isLoading && employees.length > 0">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Employee</th>
+        <th>Email</th>
+        <th>Department</th>
+        <th>Status</th>
+        <th class="col-actions">Actions</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr *ngFor="let emp of employees" class="row-clickable" (click)="openDetail(emp)">
+        <!-- EMPLOYEE -->
+        <td data-label="Employee">
+          <div class="cell-employee">
+            <div class="cell-employee__main">
+              <span class="cell-employee__name">{{ emp.fullName }}</span>
+              <svg class="cell-employee__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </div>
+
+            <span class="cell-employee__sub" *ngIf="emp.designation">
+              {{ emp.designation }}
+            </span>
+            <span class="cell-employee__sub cell-employee__sub--muted" *ngIf="!emp.designation">
+              Designation not assigned
+            </span>
+          </div>
+        </td>
+
+        <!-- EMAIL -->
+        <td data-label="Email">{{ emp.email }}</td>
+
+        <!-- DEPARTMENT -->
+        <td data-label="Department">
+          <span class="badge badge--neutral" *ngIf="emp.department">
+            {{ emp.department }}
+          </span>
+          <span class="muted" *ngIf="!emp.department">Not assigned</span>
+        </td>
+
+        <!-- STATUS -->
+        <td data-label="Status">
+          <span class="badge" [class.badge--success]="emp.isActive" [class.badge--danger]="!emp.isActive">
+            {{ emp.isActive ? 'Active' : 'Inactive' }}
+          </span>
+        </td>
+
+        <!-- ACTIONS -->
+        <td data-label="Actions" class="col-actions">
+          <button type="button" class="toggle-btn" [class.on]="emp.role === 'Manager'" [class.disabled]="!canToggle()"
+            [disabled]="!canToggle() || processingUserId === emp.userId" (click)="openPromoteDialog(emp, $event)"
+            [attr.aria-label]="
+              emp.role === 'Manager' ? 'Demote from Manager' : 'Promote to Manager'
+            " [title]="
+              emp.role === 'Manager' ? 'Demote from Manager' : 'Promote to Manager'
+            ">
+            <span class="toggle-knob"></span>
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Confirm Dialog -->
+<app-confirm-dialog [isOpen]="dialogOpen" [title]="dialogTitle" [message]="dialogMessage" [boldText]="dialogBoldText"
+  [confirmText]="dialogConfirmText" [variant]="dialogVariant" (confirmed)="onDialogConfirm()"
+  (cancelled)="onDialogCancel()">
+</app-confirm-dialog>

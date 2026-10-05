@@ -1,0 +1,22 @@
+<div class="dialog-overlay" [class.show]="isOpen" (click)="onOverlayClick()">
+  <div class="dialog-box" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+    <h3 class="dialog-title">{{ title }}</h3>
+
+    <p class="dialog-message">
+      {{ messageParts.before }}<strong class="dialog-strong">{{ messageParts.bold }}</strong>{{ messageParts.after }}
+    </p>
+
+    <div class="dialog-actions">
+      <button type="button" class="dlg-btn dlg-cancel" (click)="onCancel()">
+        {{ cancelText }}
+      </button>
+      <button type="button"
+        class="dlg-btn"
+        [class.dlg-primary]="variant === 'primary'"
+        [class.dlg-danger]="variant === 'danger'"
+        (click)="onConfirm()">
+        {{ confirmText }}
+      </button>
+    </div>
+  </div>
+</div>

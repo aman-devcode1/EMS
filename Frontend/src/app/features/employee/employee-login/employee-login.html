@@ -1,0 +1,67 @@
+<div class="auth-shell">
+  <aside class="auth-brand">
+    <span class="auth-mark">EMS</span>
+    <div class="auth-brand__body">
+      <h1>Employee Management System</h1>
+      <p>Your personnel record, hours and details — all in one place.</p>
+    </div>
+    <div class="auth-brand__foot">Internal personnel platform</div>
+  </aside>
+
+  <main class="auth-panel">
+    <div class="auth-panel__inner">
+      <h2>Employee sign-in</h2>
+      <p class="auth-form__hint">No one-time code needed — sign in directly.</p>
+
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
+
+        <!-- Email -->
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input id="email" type="email" [name]="empEmailFieldName" formControlName="email" class="form-control"
+            [class.invalid]="isInvalid('email')" placeholder="you@company.com" autocomplete="new-password" readonly
+            onfocus="this.removeAttribute('readonly')" />
+          <div class="field-error" *ngIf="isInvalid('email')">{{ getError('email') }}</div>
+        </div>
+
+        <!-- Password -->
+        <div class="form-group">
+          <label for="password">Password</label>
+          <div class="password-wrapper">
+            <input id="password" [name]="empPasswordFieldName" [type]="showPassword ? 'text' : 'password'" formControlName="password"
+              class="form-control" [class.invalid]="isInvalid('password')" autocomplete="current-password" readonly
+            onfocus="this.removeAttribute('readonly')" />
+            <button type="button" class="password-toggle" (click)="togglePassword()"
+              [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'">
+              {{ showPassword ? 'Hide' : 'Show' }}
+            </button>
+          </div>
+          <div class="field-error" *ngIf="isInvalid('password')">{{ getError('password') }}</div>
+        </div>
+
+        <!-- Phone -->
+        <div class="form-group">
+          <label for="phoneNumber">Phone number</label>
+          <input id="phoneNumber"[name]="empPhoneFieldName" type="text" formControlName="phoneNumber" class="form-control"
+            [class.invalid]="isInvalid('phoneNumber')" placeholder="10-digit Indian number" inputmode="numeric"
+            maxlength="10" autocomplete="new-password" (input)="onPhoneInput($event)" readonly
+            onfocus="this.removeAttribute('readonly')" />
+          <div class="field-error" *ngIf="isInvalid('phoneNumber')">{{ getError('phoneNumber') }}</div>
+        </div>
+
+        <div class="auth-form__forgot">
+          <a routerLink="/forgot-password">Forgot password?</a>
+        </div>
+
+        <button type="submit" [disabled]="isLoading" class="btn btn-primary mt-3">
+          {{ isLoading ? 'Logging in…' : 'Login' }}
+        </button>
+      </form>
+
+      <p class="auth-form__switch">
+        New here? <a routerLink="/employee/register">Create your account</a><br />
+        Are you an admin? <a routerLink="/admin/login">Sign in as admin</a>
+      </p>
+    </div>
+  </main>
+</div>

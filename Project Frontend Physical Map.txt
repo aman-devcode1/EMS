@@ -1,0 +1,74 @@
+src/app/
+│
+├── core/                          👉 (Backend ka Core + Infrastructure equivalent)
+│   ├── models/                    # Interfaces (DTOs jaise backend mein)
+│   │   ├── auth.model.ts          # LoginRequest, RegisterRequest, TokenResponse
+│   │   ├── employee.model.ts      # Employee, CreateEmployeeDto, UpdateEmployeeDto
+│   │   ├── otp.model.ts           # OtpVerifyRequest, ResendOtpRequest
+│   │   ├── user.model.ts          # User, Role enum
+│   │   └── api-response.model.ts  # Generic ApiResponse<T>, PagedResult<T>
+│   │
+│   ├── enums/
+│   │   └── role.enum.ts           # Admin, Manager, Employee
+│   │
+│   ├── constants/
+│   │   └── api-endpoints.ts       # Sab endpoints ek jagah
+│   │
+│   ├── services/                  # Backend "Services layer" jaisa
+│   │   ├── auth.service.ts        # register, login, refresh, revoke, verify-otp
+│   │   ├── admin.service.ts       # admin register/login/verify-otp
+│   │   ├── employee.service.ts    # CRUD, pagination, search, promote, toggle
+│   │   ├── otp.service.ts         # resend otp
+│   │   ├── token.service.ts       # access/refresh token store & read
+│   │   └── toast.service.ts       # notifications (success/error)
+│   │
+│   ├── interceptors/              # Backend "Middleware" jaisa
+│   │   ├── auth.interceptor.ts    # Access token attach karega har request mein
+│   │   ├── error.interceptor.ts   # Global exception handling (backend jaisa hi)
+│   │   └── refresh.interceptor.ts # 401 pe silently refresh token try karega
+│   │
+│   └── guards/                    # Backend "[Authorize]" jaisa
+│       ├── auth.guard.ts          # Logged-in check
+│       └── role.guard.ts          # Role-based access (Admin/Manager/Employee)
+│
+├── shared/                        👉 Reusable UI (kisi bhi module mein use hoga)
+│   ├── components/
+│   │   ├── otp-input/             # 6-digit OTP box UI
+│   │   ├── loader/                # Spinner
+│   │   ├── pagination/            
+│   │   ├── confirm-dialog/        # delete/toggle confirm
+│   │   └── data-table/            # employee list ke liye reusable table
+│   ├── pipes/
+│   └── validators/                # custom form validators (password strength, phone, etc.)
+│
+├── features/                      👉 Actual pages/screens (Backend "Controllers" jaisa)
+│   ├── auth/
+│   │   ├── register/              # Employee register
+│   │   ├── login/                 # Employee login
+│   │   └── verify-otp/            # Registration OTP verify
+│   │
+│   ├── admin/
+│   │   ├── admin-register/
+│   │   ├── admin-login/
+│   │   └── admin-verify-otp/
+│   │
+│   ├── employee-management/       # Admin/Manager access
+│   │   ├── employee-list/         # pagination + search + filter + sort
+│   │   ├── employee-form/         # create + edit dono ke liye common
+│   │   └── employee-detail/
+│   │
+│   └── dashboard/
+│       ├── admin-dashboard/
+│       ├── manager-dashboard/
+│       └── employee-dashboard/
+│
+├── layout/                        # Navbar, Sidebar, Footer (role ke hisaab se dikhna/chupna)
+│   ├── navbar/
+│   ├── sidebar/
+│   └── main-layout/
+│
+├── app.routes.ts                  # Sabhi routes + guards yaha lagenge
+├── app.config.ts                  # Interceptors, providers register honge
+└── environments/
+    ├── environment.ts             # apiUrl: http://localhost:xxxx/api
+    └── environment.prod.ts
