@@ -5,9 +5,11 @@ using EMS.Core.Interfaces.ExternalServices;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace EMS.Infrastructure.ExternalServices;
 
@@ -34,6 +36,7 @@ public class EmailService : IEmailService
         {
             OtpPurpose.PasswordReset => "password reset",
             OtpPurpose.Login => "login",
+            OtpPurpose.AdminReplacementApproval => "admin replacement approval",
             _ => "registration",
         };
 
@@ -44,23 +47,19 @@ public class EmailService : IEmailService
         string subject, body;
         if (isResend)
         {
-            // 🔥 Purane code ki VALUE kahin bhi nahi likhi — sirf itna bataya jaata hai
+            // Purane code ki VALUE kahin bhi nahi likhi — sirf itna bataya jaata hai
             // ki wo ab invalid hai. Ek expose ho chuka secret dobara dikhane ka koi
             // fayda nahi, sirf leak-surface badhta hai.
-            subject = purpose == OtpPurpose.PasswordReset
-                ? "🔐 Your New Password Reset Code (Resent)"
-                : "🔐 Your New OTP Code (Resent)";
+            subject = $"Your new EMS {purposeLabel} code (resent)";
             body = $@"
-            <p><strong>⚠️ Important:</strong> Your previous code is no longer valid.</p>
+            <p><strong>Important:</strong> Your previous code is no longer valid.</p>
             <p>Your new {purposeLabel} code is: <b style='font-size:24px;'>{newOtpCode}</b></p>
             <p>This code will expire in <b>{_otpSettings.ExpiryMinutes} minutes</b>.</p>
             <p>{disclaimer}</p>";
         }
         else
         {
-            subject = purpose == OtpPurpose.PasswordReset
-                ? "🔐 Your EMS Password Reset Code"
-                : "🔐 Your EMS OTP Code";
+            subject = $"Your EMS {purposeLabel} code";
             body = $@"
             <p>Your {purposeLabel} code is: <b style='font-size:24px;'>{newOtpCode}</b></p>
             <p>This code will expire in <b>{_otpSettings.ExpiryMinutes} minutes</b>.</p>
@@ -72,12 +71,12 @@ public class EmailService : IEmailService
         return true;
     }
 
-    // 🔥 Password reset hone ke baad best-effort notification — is method ka fail hona
+    // Password reset hone ke baad best-effort notification — is method ka fail hona
     // reset operation ko fail NAHI karta (AuthService isse try/catch mein wrap karta hai),
     // isliye yahan ExternalServiceException throw nahi karte, bas false return karte hain.
     public async Task<bool> SendPasswordChangedEmailAsync(string toEmail)
     {
-        var subject = "✅ Your EMS Password Was Changed";
+        var subject = "Your EMS password was changed";
 
         var body = @"
         <p>This is confirmation that your EMS account password just changed.</p>
@@ -121,7 +120,8 @@ public class EmailService : IEmailService
             sender = new { email = settings.SenderEmail, name = settings.SenderName },
             to = new[] { new { email = toEmail } },
             subject,
-            htmlContent = htmlBody
+            htmlContent = htmlBody,
+            textContent = ToPlainText(htmlBody)
         };
 
         using var request = new HttpRequestMessage(HttpMethod.Post, settings.ApiUrl)
@@ -143,25 +143,59 @@ public class EmailService : IEmailService
                 toEmail, _httpClient.Timeout.TotalSeconds);
 
             throw new ExternalServiceException(
-                "The email service is temporarily slow. Please try again in a moment.");
+                "The email provider took too long to respond. Please try again in a moment.");
         }
         catch (HttpRequestException ex)
         {
-            // Network issue — DNS fail, connection refused, etc.
+            // Server se provider tak network issue — DNS fail, connection refused, etc.
             _logger.LogError(ex, "Email provider network error for {Email}.", toEmail);
 
             throw new ExternalServiceException(
-                "We couldn't reach the email service. Please check your internet and try again.");
+                "Our server could not reach the email provider. Please try again in a moment.");
         }
 
         using (response)
         {
+            var responseBody = await response.Content.ReadAsStringAsync();
+
             if (!response.IsSuccessStatusCode)
             {
-                var errorBody = await response.Content.ReadAsStringAsync();
-                _logger.LogError("Email provider request failed: {StatusCode} - {ErrorBody}", response.StatusCode, errorBody);
-                throw new ExternalServiceException("Unable to send OTP email at the moment. Please try again shortly.");
+                _logger.LogError("Email provider request failed: {StatusCode} - {ErrorBody}", (int)response.StatusCode, responseBody);
+                throw new ExternalServiceException(DescribeFailure(response.StatusCode));
             }
+
+            _logger.LogInformation("Email accepted by provider for {Email}. MessageId={MessageId}", toEmail, ExtractMessageId(responseBody));
         }
+    }
+
+    // Provider ki andar ki detail user ko nahi dikhate, par asli karan (kis tarah ki problem) batate hain.
+    // Poori detail sirf server log mein jaati hai.
+    private static string DescribeFailure(HttpStatusCode status) => (int)status switch
+    {
+        400 => "The email provider rejected the message (invalid recipient or sender address).",
+        401 or 403 => "The email provider could not authorise our request (invalid API key or unverified sender). Please contact support.",
+        429 => "The email provider's sending limit has been reached. Please try again a little later.",
+        >= 500 => "The email provider is temporarily unavailable. Please try again shortly.",
+        _ => $"The email provider returned an unexpected response (HTTP {(int)status}). Please try again."
+    };
+
+    private static string ExtractMessageId(string json)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            return doc.RootElement.TryGetProperty("messageId", out var id) ? id.GetString() ?? "n/a" : "n/a";
+        }
+        catch (Exception ex) when (ex is JsonException or InvalidOperationException)
+        {
+            return "n/a";
+        }
+    }
+
+    private static string ToPlainText(string html)
+    {
+        var text = Regex.Replace(html, "<[^>]+>", " ");
+        text = WebUtility.HtmlDecode(text);
+        return Regex.Replace(text, @"\s+", " ").Trim();
     }
 }

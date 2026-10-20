@@ -1,11 +1,12 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { AdminLoginDto, AdminProfileDto, AdminRegisterDto, ChangePasswordDto, ReplaceAdminDto, UpdateAdminProfileDto } from '../models/admin.model';
+import { AdminLoginDto, AdminProfileDto, AdminRegisterDto, ChangePasswordDto, ReplaceAdminDto, ReplaceAdminResponseDto, UpdateAdminProfileDto } from '../models/admin.model';
 import { Observable } from 'rxjs';
 import { ApiResponse } from '../models/api-response.model';
 import { OtpSentResponseDto, ResendOtpDto, VerifyOtpDto } from '../models/otp.model';
 import { API_ENDPOINTS } from '../constants/api-endpoints';
 import { TokenResponseDto } from '../models/token.model';
+import { LandingStatus } from '../models/landing.model';
 
 @Injectable({
   providedIn: 'root',
@@ -39,8 +40,8 @@ export class AdminService {
   }
 
   // Replace Admin
-  replaceAdmin(data: ReplaceAdminDto): Observable<ApiResponse<OtpSentResponseDto>> {
-    return this.http.post<ApiResponse<OtpSentResponseDto>>(API_ENDPOINTS.ADMIN.REPLACE_ADMIN, data);
+  replaceAdmin(data: ReplaceAdminDto): Observable<ApiResponse<ReplaceAdminResponseDto>> {
+    return this.http.post<ApiResponse<ReplaceAdminResponseDto>>(API_ENDPOINTS.ADMIN.REPLACE_ADMIN, data);
   }
 
   // Get Manager
@@ -66,5 +67,9 @@ export class AdminService {
   // Admin Password Change
   changePassword(data: ChangePasswordDto): Observable<ApiResponse<{ requiresRelogin: boolean }>> {
     return this.http.post<ApiResponse<{ requiresRelogin: boolean }>>(API_ENDPOINTS.ADMIN.CHANGE_PASSWORD, data);
+  }
+
+  getAdminStatus(): Observable<ApiResponse<LandingStatus>> {
+    return this.http.get<ApiResponse<LandingStatus>>(API_ENDPOINTS.ADMIN.STATUS);
   }
 }

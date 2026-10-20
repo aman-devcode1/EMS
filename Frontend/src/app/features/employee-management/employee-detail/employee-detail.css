@@ -12,32 +12,12 @@
 /* ============================================================ */
 .detail-head {
     display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 20px;
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 8px;
     margin-bottom: 26px;
 }
 
-.detail-head__text h1 {
-    font-size: 1.6rem;
-    margin: 0 0 4px 0;
-    color: var(--ink);
-}
-
-.detail-head__text p {
-    color: var(--slate);
-    margin: 0;
-    font-size: 0.9rem;
-}
-
-.detail-head__actions {
-    display: flex;
-    gap: 10px;
-    flex-shrink: 0;
-}
-
-/* Back button */
+/* Back Button */
 .back-btn {
     display: inline-flex;
     align-items: center;
@@ -45,17 +25,14 @@
     background: transparent;
     border: none;
     padding: 6px 10px 6px 4px;
-    margin: 0 0 12px -4px;
+    margin: 0 0 4px -4px;
     color: var(--slate);
     font-family: var(--font-sans);
     font-size: 0.85rem;
     font-weight: 600;
     cursor: pointer;
     border-radius: 6px;
-    transition:
-        color 0.15s ease,
-        background-color 0.15s ease,
-        transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: color 0.15s ease, background-color 0.15s ease, transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .back-btn svg {
@@ -75,13 +52,33 @@
     transform: translateX(-3px);
 }
 
-.back-btn:active {
-    transform: scale(0.98);
+/* Title & Buttons Row */
+.detail-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+    flex-wrap: wrap;
+    width: 100%;
 }
 
-.back-btn:focus-visible {
-    outline: 2px solid var(--brass);
-    outline-offset: 2px;
+.detail-title-group h1 {
+    font-size: 1.6rem;
+    margin: 0 0 4px 0;
+    color: var(--ink);
+}
+
+.detail-title-group p {
+    color: var(--slate);
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+.detail-head__actions {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+    margin-top: 4px; /* H1 ke saath align karne ke liye */
 }
 
 /* ============================================================ */

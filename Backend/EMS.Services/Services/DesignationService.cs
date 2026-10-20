@@ -10,18 +10,28 @@ namespace EMS.Services.Services;
 public class DesignationService : IDesignationService
 {
     private readonly IDesignationRepository _repo;
+    private readonly IEmployeeRepository _employeeRepository;
     private readonly IMapper _mapper;
 
-    public DesignationService(IDesignationRepository repo, IMapper mapper)
+    public DesignationService(IDesignationRepository repo, IEmployeeRepository employeeRepository, IMapper mapper)
     {
         _repo = repo;
+        _employeeRepository = employeeRepository;
         _mapper = mapper;
     }
 
     public async Task<List<DesignationDto>> GetAllAsync(bool includeInactive = false)
     {
         var items = await _repo.GetAllAsync(includeInactive);
-        return _mapper.Map<List<DesignationDto>>(items);
+        var assignedIds = await _employeeRepository.GetAssignedDesignationIdsAsync();
+
+        var dtos = _mapper.Map<List<DesignationDto>>(items);
+
+        foreach (var dto in dtos)
+        {
+            dto.IsAssigned = assignedIds.Contains(dto.Id);
+        }
+        return dtos;
     }
 
     public async Task<DesignationDto> GetByIdAsync(int id)
@@ -77,5 +87,19 @@ public class DesignationService : IDesignationService
 
         await _repo.UpdateAsync(entity);
         return _mapper.Map<DesignationDto>(entity);
+    }
+
+    public async Task DeleteAsync(int id)
+    {
+        var department = await _repo.GetByIdAsync(id);
+        if (department == null)
+            throw new NotFoundException($"Department with Id {id} not found.");
+
+        // ✅ Check for active employees
+        var hasEmployees = await _employeeRepository.ExistsByDepartmentIdAsync(id);
+        if (hasEmployees)
+            throw new ConflictException("Cannot delete this department because it is assigned to employees. Please deactivate it instead.");
+
+        await _repo.DeleteAsync(id);
     }
 }

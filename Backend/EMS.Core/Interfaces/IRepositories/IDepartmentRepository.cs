@@ -9,4 +9,5 @@ public interface IDepartmentRepository
     Task<Department?> GetByNameAsync(string name);
     Task AddAsync(Department department);
     Task UpdateAsync(Department department);
+    Task DeleteAsync(int id);
 }

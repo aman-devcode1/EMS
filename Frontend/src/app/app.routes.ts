@@ -11,29 +11,36 @@ import { EmployeeDashboard } from './features/dashboard/employee-dashboard/emplo
 import { EmployeeLogin } from './features/employee/employee-login/employee-login';
 import { ForgotPassword } from './features/auth/forgot-password/forgot-password';
 import { ResetPassword } from './features/auth/reset-password/reset-password';
-import { Manager } from './features/manager/manager';
 import { EmployeeList } from './features/employee-management/employee-list/employee-list';
 import { AdminProfile } from './features/admin/admin-profile/admin-profile';
 import { VerifyOtp } from './features/auth/verify-otp/verify-otp';
 import { EmployeeProfile } from './features/employee/employee-profile/employee-profile';
 import { EmployeeDetail } from './features/employee-management/employee-detail/employee-detail';
 import { MasterData } from './features/admin/master-data/master-data';
+import { LandingPage } from './features/landing/landing-page/landing-page';
 
-// ✅ Local constants — apni routes.ts file se
+import { ManagerDashboard } from './features/dashboard/manager-dashboard/manager-dashboard';
 import { ROUTES } from './core/constants/routes';
 import { Role } from './core/enums/role';
+import { ManagerDetail } from './features/manager-management/manager-detail/manager-detail';
+import { ManagerList } from './features/manager-management/manager-list/manager-list';
 
 export const routes: Routes = [
   // ============================================================
-  // DEFAULT
+  // DEFAULT — LANDING PAGE
   // ============================================================
-  { path: '', redirectTo: ROUTES.ADMIN_LOGIN, pathMatch: 'full' },
+  { path: '', component: LandingPage, pathMatch: 'full' },
 
   // ============================================================
   // PUBLIC — ADMIN
   // ============================================================
   { path: ROUTES.ADMIN_LOGIN, component: AdminLogin },
   { path: ROUTES.ADMIN_REGISTER, component: AdminRegister },
+
+  // ============================================================
+  // PUBLIC — MANAGER (Uses Admin Login Component)
+  // ============================================================
+  // { path: 'manager/login', component: AdminLogin },
 
   // ============================================================
   // PUBLIC — EMPLOYEE
@@ -88,9 +95,26 @@ export const routes: Routes = [
       { path: 'replace-admin', component: ReplaceAdmin },
       { path: 'employees', component: EmployeeList },
       { path: 'employees/:id', component: EmployeeDetail },
-      { path: 'managers', component: Manager },
+      { path: 'managers', component: ManagerList },
+      { path: 'managers/:id', component: ManagerDetail },
       { path: 'profile', component: AdminProfile },
       { path: 'master-data', component: MasterData },
+    ],
+  },
+
+  // ============================================================
+  // MANAGER AREA (protected)
+  // ============================================================
+  {
+    path: 'manager',
+    component: MainLayout,
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: Role.Manager },
+    children: [
+      { path: 'dashboard', component: ManagerDashboard },
+      { path: 'employees', component: EmployeeList },
+      { path: 'profile', component: AdminProfile },
+      { path: 'master-data', component: MasterData }
     ],
   },
 ];

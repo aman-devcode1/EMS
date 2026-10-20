@@ -10,6 +10,8 @@ export class TokenService {
   // Refresh token ab HttpOnly cookie mein hai (JS access nahi kar sakta)
   private accessToken: string | null = null;
 
+  constructor(){ localStorage.removeItem('userRole'); }
+
   // ============================================================
   // ACCESS TOKEN
   // ============================================================

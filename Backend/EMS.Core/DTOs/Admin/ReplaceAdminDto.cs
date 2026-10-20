@@ -35,4 +35,7 @@ public class ReplaceAdminDto
     [Required(ErrorMessage = "Confirm password is required.")]
     [Compare(nameof(NewAdminPassword), ErrorMessage = "Passwords do not match.")]
     public string NewAdminConfirmPassword { get; set; } = string.Empty;
+
+    [RegularExpression(@"^\d{6}$", ErrorMessage = "Approval code must be exactly 6 digits.")]
+    public string? ApprovalCode { get; set; }
 }

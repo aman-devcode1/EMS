@@ -1,10 +1,9 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { AuthService } from '../../../core/services/auth';
-import { ToastService } from '../../../core/services/toast';
-import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
+import { AuthService } from '../../../core/services/auth';
 
 @Component({
   selector: 'app-forgot-password',
@@ -13,26 +12,34 @@ import { finalize } from 'rxjs';
   templateUrl: './forgot-password.html',
   styleUrl: './forgot-password.css',
 })
-export class ForgotPassword {
+export class ForgotPassword implements OnInit {
   forgotForm: FormGroup;
   isLoading = false;
-  // Submit hone ke baad form ki jagah ek neutral confirmation dikhate hain —
-  // backend jaanbujh kar generic message deta hai (email exist karta hai ya
-  // nahi ye reveal nahi karna), isliye UI bhi wahi treat karta hai.
+  // Backend jaanbujh kar generic message deta hai, isliye UI bhi neutral confirmation dikhata hai.
   isSubmitted = false;
+
+  currentRole: 'admin' | 'employee' | 'manager' = 'admin';
 
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
-    private toastService: ToastService,
     private router: Router,
+    private route: ActivatedRoute,
   ) {
     this.forgotForm = this.fb.group({
       email: ['', [Validators.required, Validators.email, Validators.maxLength(255)]],
     });
   }
 
-  onSubmit() {
+  ngOnInit(): void {
+    this.route.queryParams.subscribe(params => {
+      if (params['role']) {
+        this.currentRole = params['role'];
+      }
+    });
+  }
+
+  onSubmit(): void {
     if (this.forgotForm.invalid) {
       this.forgotForm.markAllAsTouched();
       return;
@@ -42,22 +49,32 @@ export class ForgotPassword {
     const email = this.forgotForm.value.email;
 
     this.authService.forgotPassword({ email })
-    .pipe(finalize(() => this.isLoading = false))
-    .subscribe({
-      next: (response) => {
-        this.isSubmitted = true;
-        // backend ka genermic message ghi dikhate hai - koi extra info add nhi karte hai.
-      },
-      error: () => {
-        this.isLoading = false;
-        this.toastService.showError("Something went wrong. Please try again.");
-      },
-    });
+      .pipe(finalize(() => (this.isLoading = false)))
+      .subscribe({
+        next: () => {
+          this.isSubmitted = true;
+        },
+        // Error toast errorInterceptor dikhata hai. Yahan dobara toast nahi.
+        error: () => { },
+      });
   }
 
-  goToResetPassword() {
+  goToResetPassword(): void {
     this.router.navigate(['/reset-password'], {
       queryParams: { email: this.forgotForm.value.email },
     });
+  }
+
+  // ✅ Helper: Role ke hisaab se login URL
+  getLoginUrl(): string {
+    if (this.currentRole === 'employee') return '/employee/login';
+    return '/admin/login'; // Admin aur Manager dono yahan jayenge
+  }
+
+  // ✅ Helper: Role ke hisaab se text
+  getRoleLabel(): string {
+    if (this.currentRole === 'employee') return 'Employee';
+    if (this.currentRole === 'manager') return 'Manager';
+    return 'Admin';
   }
 }

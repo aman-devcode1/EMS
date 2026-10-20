@@ -28,6 +28,7 @@ public class AuthController : ControllerBase
     // 1. REGISTER ENDPOINT
     // ============================================================
     [HttpPost("register")]
+    [EnableRateLimiting("otp-send")]
     public async Task<IActionResult> Register([FromBody] RegisterDto registerDto)
     {
         var result = await _authService.RegisterAsync(registerDto);
@@ -195,6 +196,7 @@ public async Task<IActionResult> RefreshToken()
     // 6. Resend Otp 
     // ============================================================
     [HttpPost("resend-otp")]
+    [EnableRateLimiting("otp-send")]
     public async Task<IActionResult> ResendOtp([FromBody] ResendOtpDto resendOtpDto)
     {
         var result = await _authService.ResendOtpAsync(resendOtpDto);
@@ -211,6 +213,7 @@ public async Task<IActionResult> RefreshToken()
     // 6. Fsorgot Password - Email -> OTP (Admin/Manager/Emaployee sabhi k liye same endpoint)
     // ============================================================
     [HttpPost("forgot-password")]
+    [EnableRateLimiting("otp-send")]
     [AllowAnonymous]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto forgotPasswordDto)
     {

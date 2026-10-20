@@ -18,6 +18,7 @@ using EMS.Core.Dtos.Auth;
 using EMS.Core.Configuration;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
+using EMS.Core.DTOs.Employee;
 
 namespace EMS.Services.Services;
 
@@ -32,6 +33,7 @@ public class AuthService : IAuthService
     private readonly IConfiguration _configuration;
     private readonly JwtSettings _jwtSettings;
     private readonly ILogger<AuthService> _logger;
+    private readonly OtpSettings _otpSetting;
     private readonly IMapper _mapper;
 
     public AuthService(
@@ -43,6 +45,7 @@ public class AuthService : IAuthService
         IEmailService emailService,
         IConfiguration configuration,
         IOptions<JwtSettings> jwtSettings,
+        IOptions<OtpSettings> otpSettings,
         ILogger<AuthService> logger,
         IMapper mapper
         )
@@ -55,6 +58,7 @@ public class AuthService : IAuthService
         _emailService = emailService;
         _configuration = configuration;
         _jwtSettings = jwtSettings.Value;
+        _otpSetting = otpSettings.Value;
         _logger = logger;
         _mapper = mapper;
     }
@@ -105,28 +109,42 @@ public class AuthService : IAuthService
     // ============================================================
     public async Task<OtpSentResponseDto> RegisterAsync(RegisterDto registerDto)
     {
+        ValidateAdultDateOfBirth(registerDto.DateOfBirth);
+
         var existingUser = await _userRepository.GetByEmailAsync(registerDto.Email);
+
         if (existingUser != null)
-            throw new ConflictException("This email is already registered. Please sign in instead.");
+        {
+            // Verified account, or Admin/Manager: sign in
+            if (existingUser.IsActive || existingUser.Role != RoleType.Employee)
+                throw new ConflictException("This email is already registered. Please sign in instead.");
 
-        var existingEmployee = await _employeeRepository.GetByEmailAsync(registerDto.Email);
-        if (existingEmployee != null)
-            throw new ConflictException("This email is already associated with an employee record. Please use another email or contact support.");
+            // Unverified employee: update with new details + new OTP
+            await EnsureContactAvailableAsync(registerDto.Email, registerDto.PhoneNumber, existingUser.Employee?.Id);
 
-        var today = DateTime.UtcNow;
-        var minAllowedYear = today.Year - 100;
-        var maxAllowedYear = today.Year - 18;
+            existingUser.PasswordHash = BCrypt.Net.BCrypt.HashPassword(registerDto.Password);
+            existingUser.IsActive = false;
+            await _userRepository.UpdateAsync(existingUser);
 
-        if (registerDto.DateOfBirth.Year < minAllowedYear)
-            throw new BadRequestException($"Date of birth year must be {minAllowedYear} or later.");
+            if (existingUser.Employee != null)
+            {
+                _mapper.Map(registerDto, existingUser.Employee);
+                existingUser.Employee.IsActive = false;
+                existingUser.Employee.PresentAddress ??= string.Empty;
+                existingUser.Employee.PreviousCompanyRole ??= string.Empty;
+                await _employeeRepository.UpdateAsync(existingUser.Employee);
+            }
 
-        if (registerDto.DateOfBirth.Year > maxAllowedYear)
-            throw new BadRequestException("You must be at least 18 years old to register.");
+            await _otpService.GenerateAndSendOtpAsync(existingUser.Id, existingUser.Email, OtpPurpose.Registration);
+            return new OtpSentResponseDto { Email = existingUser.Email };
+        }
+
+        await EnsureContactAvailableAsync(registerDto.Email, registerDto.PhoneNumber, null);
 
         var user = _mapper.Map<User>(registerDto);
         user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(registerDto.Password);
         user.Role = RoleType.Employee;
-        user.IsActive = false; // OTP verify hone tak inactive
+        user.IsActive = false; // inactive untill OTP verify
         user.CreatedAt = DateTime.UtcNow;
 
         await _userRepository.AddAsync(user);
@@ -154,7 +172,7 @@ public class AuthService : IAuthService
         {
             _logger.LogWarning("Login attempt for non-existent email: {Email}", loginDto.Email);
             throw new UnauthorizedAccessException(
-                "No account found with this email. Please check or register.");
+                "No account found with this email. Please check email or register an new account.");
         }
 
         if (!VerifyPassword(loginDto.Password, user.PasswordHash))
@@ -171,8 +189,12 @@ public class AuthService : IAuthService
         if (user.Employee == null || user.Employee.PhoneNumber != loginDto.PhoneNumber)
             throw new UnauthorizedAccessException("The phone number doesn't match our records. Please verify and try again.");
 
+        // Password aur phone dono sahi: tabhi OTP bhejo, 409 do (frontend verify page par le jayega)
         if (!user.IsActive)
-            throw new UnauthorizedAccessException("Your account is not verified yet. Please complete OTP verification.");
+        {
+            await SendVerificationOtpQuietlyAsync(user);
+            throw new ConflictException("Your account is not verified yet. Please verify your email with the OTP.");
+        }
 
         _logger.LogInformation("Employee login success: UserId={UserId}, Email={Email}", user.Id, user.Email);
         return await IssueTokensAsync(user);
@@ -194,13 +216,13 @@ public class AuthService : IAuthService
         {
             _logger.LogWarning("Refresh attempt with unknown token. IP={IP}, UA={UserAgent}", ip, userAgent);
             // We cannot identify the user here, so just reject
-            throw new UnauthorizedAccessException("Refresh token not found.");
+            throw new UnauthorizedAccessException("Your session has ended. Please sign in again.");
         }
 
         // Absolute Expiry
         if (storedToken.ExpiresAt < DateTime.UtcNow)
         {
-             _logger.LogInformation("Refresh token absolute expiry for UserId={UserId}", storedToken.UserId);
+            _logger.LogInformation("Refresh token absolute expiry for UserId={UserId}", storedToken.UserId);
             await _refreshTokenRepository.RevokeAsync(storedToken, "Absolute expiry", ip);
             throw new UnauthorizedAccessException("Refresh token has expired. Please login again.");
         }
@@ -214,7 +236,7 @@ public class AuthService : IAuthService
             // throw new UnauthorizedAccessException("Refresh token has been revoked. Please login again.");
         }
 
-        var user = storedToken.User ?? throw new UnauthorizedAccessException("User not found for the provided refresh token.");
+        var user = storedToken.User ?? throw new UnauthorizedAccessException("Your session has ended. Please sign in again.");
         var policy = _jwtSettings.GetPolicyForRole(user.Role);
 
         // Inactivity
@@ -251,7 +273,7 @@ public class AuthService : IAuthService
         };
         await _refreshTokenRepository.CreateAsync(newToken);
 
-_logger.LogDebug("Token rotated for UserId={UserId}", user.Id);
+        _logger.LogDebug("Token rotated for UserId={UserId}", user.Id);
 
         return new TokenResponseDto
         {
@@ -295,32 +317,46 @@ _logger.LogDebug("Token rotated for UserId={UserId}", user.Id);
     // ============================================================
     public async Task<OtpSentResponseDto> AdminRegisterAsync(AdminRegisterDto adminRegisterDto)
     {
-        var existingUser = await _userRepository.GetByEmailAsync(adminRegisterDto.Email);
-
-        if (existingUser != null)
-        {
-            if (existingUser.IsActive)
-            {
-                // Verified account hai — dobara register nahi hone dena
-                throw new ConflictException("This email is already registered and verified. Please login instead.");
-            }
-
-            // Unverified account hai — naya record banane ke bajaye, purane ko hi
-            // dobara OTP bhej do. Frontend ka success-handler already OTP verify
-            // page par navigate kar deta hai — koi extra button/logic nahi chahiye.
-            await _otpService.GenerateAndSendOtpAsync(existingUser.Id, existingUser.Email, OtpPurpose.Registration);
-            return new OtpSentResponseDto
-            {
-                Email = existingUser.Email
-            };
-        }
-
-        var existingAdmin = await _userRepository.GetAdminAsync();
-        if (existingAdmin != null)
-            throw new ConflictException("An admin already exists. Only one admin is allowed.");
-
         if (adminRegisterDto.Password != adminRegisterDto.ConfirmPassword)
             throw new BadRequestException("Password and Confirm Password do not match. Please re-enter them.");
+
+        // Is email par koi verified account ya Employee/Manager to nahi?
+        var existingUser = await _userRepository.GetByEmailAsync(adminRegisterDto.Email);
+        if (existingUser != null && (existingUser.IsActive || existingUser.Role != RoleType.Admin))
+            throw new ConflictException("This email is already registered. Please sign in instead.");
+
+        // Verified admin pehle se hai to naya nahi ban sakta
+        var existingAdmin = await _userRepository.GetAdminAsync();
+        if (existingAdmin != null && existingAdmin.IsActive)
+            throw new ConflictException("An admin already exists. Only one admin is allowed.");
+
+        // Adhura (unverified) admin hai (isi email ka ya kisi aur email ka):
+        // naya record banane ke bajaye usi ko naye details se update karo, taaki registration atke nahi.
+        var pendingAdmin = existingUser ?? existingAdmin;
+        if (pendingAdmin != null)
+        {
+            var pendingEmployee = pendingAdmin.Employee
+                ?? await _employeeRepository.GetByUserIdAsync(pendingAdmin.Id);
+
+            await EnsureContactAvailableAsync(adminRegisterDto.Email, adminRegisterDto.PhoneNumber, pendingEmployee?.Id);
+
+            pendingAdmin.Email = adminRegisterDto.Email.Trim();
+            pendingAdmin.PasswordHash = BCrypt.Net.BCrypt.HashPassword(adminRegisterDto.Password);
+            pendingAdmin.IsActive = false;
+            await _userRepository.UpdateAsync(pendingAdmin);
+
+            if (pendingEmployee != null)
+            {
+                _mapper.Map(adminRegisterDto, pendingEmployee);
+                pendingEmployee.IsActive = false;
+                await _employeeRepository.UpdateAsync(pendingEmployee);
+            }
+
+            await _otpService.GenerateAndSendOtpAsync(pendingAdmin.Id, pendingAdmin.Email, OtpPurpose.Registration);
+            return new OtpSentResponseDto { Email = pendingAdmin.Email };
+        }
+
+        await EnsureContactAvailableAsync(adminRegisterDto.Email, adminRegisterDto.PhoneNumber, null);
 
         var user = _mapper.Map<User>(adminRegisterDto);
         user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(adminRegisterDto.Password);
@@ -349,7 +385,6 @@ _logger.LogDebug("Token rotated for UserId={UserId}", user.Id);
         var user = await _userRepository.GetByEmailAsync(adminLoginDto.Email);
         if (user == null)
         {
-            _logger.LogWarning("Admin login attempt for non-existent email: {Email}", adminLoginDto.Email);
             throw new UnauthorizedAccessException(
                 "No account found with this email. Please check the email or register a new account.");
         }
@@ -359,7 +394,6 @@ _logger.LogDebug("Token rotated for UserId={UserId}", user.Id);
 
         if (!VerifyPassword(adminLoginDto.Password, user.PasswordHash))
         {
-            _logger.LogWarning("Failed admin login attempt (wrong password) for {Email}", adminLoginDto.Email);
             throw new UnauthorizedAccessException("Incorrect password. If you recently changed it, please use your new password.");
         }
 
@@ -370,9 +404,11 @@ _logger.LogDebug("Token rotated for UserId={UserId}", user.Id);
             throw new UnauthorizedAccessException("The phone number doesn't match our records. Please verify and try again.");
 
         if (!user.IsActive)
-            throw new UnauthorizedAccessException("Your account is not verified yet. Please complete OTP verification.");
+        {
+            await SendVerificationOtpQuietlyAsync(user);
+            throw new ConflictException("Your account is not verified yet. Please complete OTP verification.");
+        }
 
-_logger.LogInformation("Admin OTP sent: UserId={UserId}, Email={Email}, Role={Role}", user.Id, user.Email, user.Role);
         await _otpService.GenerateAndSendOtpAsync(user.Id, user.Email, OtpPurpose.Login);
         return new OtpSentResponseDto { Email = user.Email };
     }
@@ -406,18 +442,27 @@ _logger.LogInformation("Admin OTP sent: UserId={UserId}, Email={Email}, Role={Ro
 
         // CHECK 6: OTP code matches?
         if (!string.Equals(otp.Code, verifyOtpDto.Code.Trim(), StringComparison.Ordinal))
-            throw new BadRequestException("Incorrect OTP. Please check the OTP and try again.");
+        {
+            _logger.LogWarning("Invalid OTP attempt for {Email} (admin login)", verifyOtpDto.Email);
+            var locked = await RegisterFailedOtpAttemptAsync(otp);
+            throw new BadRequestException(locked ? "Too many incorrect attempts. Please sign in again to receive a new OTP." : "Incorrect OTP. Please check the OTP and try again.");
+        }
 
         await _otpRepository.DeleteOtpCodeAsync(otp.Id);
 
         user.IsActive = true;
+        user.UpdatedAt = DateTime.UtcNow;
         await _userRepository.UpdateAsync(user);
 
         if (user.Employee != null)
         {
             user.Employee.IsActive = true;
+            user.Employee.UpdatedAt = DateTime.UtcNow;
             await _employeeRepository.UpdateAsync(user.Employee);
         }
+
+        if (user.Role == RoleType.Admin)
+            await CompleteAdminHandoverAsync(user);
 
         return await IssueTokensAsync(user);
     }
@@ -458,8 +503,10 @@ _logger.LogInformation("Admin OTP sent: UserId={UserId}, Email={Email}, Role={Ro
         if (!string.Equals(otp.Code, verifyOtpDto.Code.Trim(), StringComparison.Ordinal))
         {
             _logger.LogWarning("Invalid OTP attempt for {Email} (admin login)", verifyOtpDto.Email);
-            throw new BadRequestException(
-                "Incorrect OTP. Please check the code and try again.");
+            var locked = await RegisterFailedOtpAttemptAsync(otp);
+            throw new BadRequestException(locked
+                ? "Too many incorrect attempts. Please sign in again to receive a new OTP."
+                : "Incorrect OTP. Please check the code and try again.");
         }
 
         await _otpRepository.DeleteOtpCodeAsync(otp.Id);
@@ -507,69 +554,230 @@ _logger.LogInformation("Admin OTP sent: UserId={UserId}, Email={Email}, Role={Ro
         return new OtpSentResponseDto { Email = user.Email };
     }
 
+    // // ============================================================
+    // // 11. REPLACE ADMIN — Sirf current Admin hi kar sakta hai
+    // // ============================================================
+    // public async Task<ReplaceAdminResponseDto> ReplaceAdminAsync(int currentAdminUserId, ReplaceAdminDto replaceAdminDto)
+    // {
+    //     // CHECK 1: Current admin exists?
+    //     var currentAdmin = await _userRepository.GetByIdAsync(currentAdminUserId);
+    //     if (currentAdmin == null)
+    //         throw new NotFoundException(
+    //             "Your session is no longer valid. Please sign in again.");
+
+    //     // CHECK 2: Current password correct? (400, 401 nahi: warna refresh-interceptor galat refresh chalata hai)
+    //     if (!VerifyPassword(replaceAdminDto.CurrentPassword, currentAdmin.PasswordHash))
+    //         throw new BadRequestException(
+    //             "Your current password is incorrect. Please try again.");
+
+    //     // CHECK 3: New password aur confirm match?
+    //     if (replaceAdminDto.NewAdminPassword != replaceAdminDto.NewAdminConfirmPassword)
+    //         throw new BadRequestException(
+    //             "Password and Confirm Password do not match. Please re-enter them.");
+
+    //     // CHECK 4: New email par verified account to nahi?
+    //     var existingUser = await _userRepository.GetByEmailAsync(replaceAdminDto.NewAdminEmail);
+    //     if (existingUser != null && existingUser.IsActive)
+    //         throw new ConflictException(
+    //             "This email is already registered and verified. Please use a different email.");
+
+    //     // Pehle se koi replacement pending ho to naya request use badal dega
+    //     var pendingAdmin = (await _userRepository.GetAdminsAsync())
+    //         .FirstOrDefault(a => !a.IsActive && a.Id != currentAdmin.Id);
+
+    //     // Jo unverified records hatane hain (ek record do baar nahi)
+    //     var staleUsers = new List<User>();
+    //     if (existingUser != null) staleUsers.Add(existingUser);
+    //     if (pendingAdmin != null && pendingAdmin.Id != existingUser?.Id) staleUsers.Add(pendingAdmin);
+
+    //     // CHECK 5: Email/phone kisi aur employee record ke paas to nahi? (hatne wale records "apne" maane jaayenge)
+    //     await EnsureContactAvailableAsync(
+    //         replaceAdminDto.NewAdminEmail,
+    //         replaceAdminDto.NewAdminPhoneNumber,
+    //         staleUsers.Select(u => u.Employee?.Id).ToArray());
+
+    //     foreach (var stale in staleUsers)
+    //         await RemoveUnverifiedAccountAsync(stale);
+
+    //     // Naya admin banao (unverified). Purane admin ko ABHI chhuna nahi hai.
+    //     var newAdminUser = _mapper.Map<User>(replaceAdminDto);
+    //     newAdminUser.PasswordHash = BCrypt.Net.BCrypt.HashPassword(replaceAdminDto.NewAdminPassword);
+    //     newAdminUser.Role = RoleType.Admin;
+    //     newAdminUser.IsActive = false;
+    //     newAdminUser.CreatedAt = DateTime.UtcNow;
+    //     await _userRepository.AddAsync(newAdminUser);
+
+    //     var newAdminEmployee = _mapper.Map<Employee>(replaceAdminDto);
+    //     newAdminEmployee.UserId = newAdminUser.Id;
+    //     newAdminEmployee.IsActive = false;
+    //     newAdminEmployee.CreatedAt = DateTime.UtcNow;
+    //     await _employeeRepository.AddAsync(newAdminEmployee);
+
+    //     _logger.LogWarning("ADMIN REPLACEMENT REQUESTED: CurrentAdminId={CurrentAdminId}, NewAdminEmail={NewAdminEmail}", currentAdmin.Id, newAdminUser.Email);
+
+    //     // Naye admin ko OTP bhejo. Handover tab hoga jab wo verify karega.
+    //     await _otpService.GenerateAndSendOtpAsync(newAdminUser.Id, newAdminUser.Email, OtpPurpose.Registration);
+    //     return new OtpSentResponseDto { Email = newAdminUser.Email };
+    // }
+
     // ============================================================
-    // 11. REPLACE ADMIN — Sirf current Admin hi kar sakta hai
+    // 11. REPLACE ADMIN — 2-Phase
+    // Phase 1: A ki approval OTP bhejo (B create nahi hoga)
+    // Phase 2: Approval verify karke B create karo, B's OTP bhejo
     // ============================================================
-    public async Task<OtpSentResponseDto> ReplaceAdminAsync(int currentAdminUserId, ReplaceAdminDto replaceAdminDto)
+    public async Task<ReplaceAdminResponseDto> ReplaceAdminAsync(
+        int currentAdminUserId, ReplaceAdminDto dto)
     {
+        // ============================================================
+        // COMMON VALIDATIONS (dono phases ke liye)
+        // ============================================================
+
         // CHECK 1: Current admin exists?
         var currentAdmin = await _userRepository.GetByIdAsync(currentAdminUserId);
         if (currentAdmin == null)
-            throw new NotFoundException(
-                "Your session is no longer valid. Please sign in again.");
+            throw new NotFoundException("Your session is no longer valid. Please sign in again.");
 
-        // CHECK 2: Current password correct?
-        if (!VerifyPassword(replaceAdminDto.CurrentPassword, currentAdmin.PasswordHash))
+        // CHECK 2: Current user is an active admin?
+        if (currentAdmin.Role != RoleType.Admin || !currentAdmin.IsActive)
             throw new UnauthorizedAccessException(
-                "Your current password is incorrect. Please try again.");
+                "Only the active administrator can initiate a replacement.");
 
-        // CHECK 3: New email already taken?
-        var existingUser = await _userRepository.GetByEmailAsync(replaceAdminDto.NewAdminEmail);
-        if (existingUser != null)
+        // CHECK 3: Current password correct? (400 - warna refresh-interceptor galat trigger karega)
+        if (!VerifyPassword(dto.CurrentPassword, currentAdmin.PasswordHash))
+            throw new BadRequestException("Your current password is incorrect. Please try again.");
+
+        // CHECK 4: Self-replacement?
+        if (string.Equals(currentAdmin.Email, dto.NewAdminEmail, StringComparison.OrdinalIgnoreCase))
+            throw new BadRequestException("You cannot replace yourself. Please use a different email.");
+
+        // CHECK 5: Password aur confirm match?
+        if (dto.NewAdminPassword != dto.NewAdminConfirmPassword)
+            throw new BadRequestException(
+                "Password and Confirm Password do not match. Please re-enter them.");
+
+        // CHECK 6: New email already verified?
+        var existingUser = await _userRepository.GetByEmailAsync(dto.NewAdminEmail!);
+        if (existingUser != null && existingUser.IsActive)
+            throw new ConflictException(
+                "This email is already registered and verified. Please use a different email.");
+
+        // CHECK 7: Email/phone kisi aur employee ke paas?
+        await EnsureContactAvailableAsync(
+            dto.NewAdminEmail!,
+            dto.NewAdminPhoneNumber,
+            existingUser?.Employee?.Id);
+
+        // ============================================================
+        // PHASE 1: APPROVAL OTP BHEJO (agar approvalCode absent hai)
+        // ============================================================
+        if (string.IsNullOrEmpty(dto.ApprovalCode))
         {
-            if (existingUser.IsActive)
-                throw new ConflictException(
-                    "This email is already registered and verified. Please use a different email.");
 
-            // Purana unverified record delete करो — fresh बनाएंगे
-            await _userRepository.DeleteAsync(existingUser.Id);
+            await _otpService.GenerateAndSendOtpAsync(
+                currentAdmin.Id,
+                currentAdmin.Email,
+                OtpPurpose.AdminReplacementApproval);
+
+            _logger.LogWarning(
+                "ADMIN REPLACEMENT APPROVAL REQUESTED: CurrentAdminId={CurrentAdminId}, TargetEmail={TargetEmail}",
+                currentAdmin.Id, dto.NewAdminEmail);
+
+            return new ReplaceAdminResponseDto
+            {
+                RequiresApproval = true,
+                NextAdminEmail = currentAdmin.Email
+            };
         }
 
-        var newAdminUser = _mapper.Map<User>(replaceAdminDto);
-        newAdminUser.PasswordHash = BCrypt.Net.BCrypt.HashPassword(replaceAdminDto.NewAdminPassword);
+        // ============================================================
+        // PHASE 2: APPROVAL VERIFY + B CREATE
+        // ============================================================
+
+        // CHECK 8: Approval OTP exist karta hai?
+        var approvalOtp = await _otpRepository.GetOtpCodeByUserIdAsync(
+            currentAdmin.Id, OtpPurpose.AdminReplacementApproval);
+
+        if (approvalOtp == null)
+            throw new BadRequestException(
+                "No approval request found. Please submit the form again.");
+
+        // CHECK 9: OTP active hai?
+        if (!approvalOtp.IsActive)
+            throw new BadRequestException(
+                "Your approval code is no longer active. Please submit the form again.");
+
+        // CHECK 10: OTP expired?
+        if (approvalOtp.ExpiresAt <= DateTime.UtcNow)
+        {
+            await _otpRepository.DeleteOtpCodeAsync(approvalOtp.Id);
+            throw new BadRequestException(
+                "Your approval code has expired. Please submit the form again.");
+        }
+
+        // CHECK 11: OTP match karta hai?
+        if (!string.Equals(approvalOtp.Code, dto.ApprovalCode.Trim(), StringComparison.Ordinal))
+        {
+            var locked = await RegisterFailedOtpAttemptAsync(approvalOtp);
+            throw new BadRequestException(locked
+                ? "Too many incorrect attempts. Please submit the form again."
+                : "Incorrect approval code. Please check your email and try again.");
+        }
+
+        // ✅ Approval verified — OTP delete karo
+        await _otpRepository.DeleteOtpCodeAsync(approvalOtp.Id);
+
+        // ============================================================
+        // STALE PENDING RECORDS CLEANUP
+        // (agar pehle koi unverified B pada hai — usko hatao)
+        // ============================================================
+        var allAdmins = await _userRepository.GetAdminsAsync();
+        var staleAdmin = allAdmins
+            .Where(a => !a.IsActive && a.Id != currentAdmin.Id)
+            .ToList();
+
+        foreach (var stale in staleAdmin)
+            await RemoveUnverifiedAccountAsync(stale);
+
+        // ============================================================
+        // B CREATE KARO (unverified)
+        // ============================================================
+        var newAdminUser = _mapper.Map<User>(dto);
+        newAdminUser.Email = dto.NewAdminEmail!.Trim();
+
+        newAdminUser.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.NewAdminPassword);
         newAdminUser.Role = RoleType.Admin;
         newAdminUser.IsActive = false;
         newAdminUser.CreatedAt = DateTime.UtcNow;
+        newAdminUser.UpdatedAt = DateTime.UtcNow;
+
         await _userRepository.AddAsync(newAdminUser);
 
-        var newAdminEmployee = _mapper.Map<Employee>(replaceAdminDto);
+        var newAdminEmployee = _mapper.Map<Employee>(dto);
         newAdminEmployee.UserId = newAdminUser.Id;
+        newAdminEmployee.Email = dto.NewAdminEmail.Trim();
         newAdminEmployee.IsActive = false;
         newAdminEmployee.CreatedAt = DateTime.UtcNow;
+        newAdminEmployee.UpdatedAt = DateTime.UtcNow;
+
         await _employeeRepository.AddAsync(newAdminEmployee);
 
-        // 🔥 Purane Admin ko demote karo — DELETE nahi, sirf role change + 30-din ka timer
-        currentAdmin.Role = RoleType.Employee;
-        await _userRepository.UpdateAsync(currentAdmin);
+        _logger.LogWarning(
+            "ADMIN REPLACEMENT APPROVED: CurrentAdminId={CurrentAdminId}, NewAdminId={NewAdminId}",
+            currentAdmin.Id, newAdminUser.Id);
 
-        if (currentAdmin.Employee != null)
+        // ============================================================
+        // B ko registration OTP bhejo
+        // ============================================================
+        await _otpService.GenerateAndSendOtpAsync(
+            newAdminUser.Id,
+            newAdminUser.Email!,
+            OtpPurpose.Registration);
+
+        return new ReplaceAdminResponseDto
         {
-            currentAdmin.Employee.ScheduledForDeletionAt = DateTime.UtcNow.AddDays(30);
-            await _employeeRepository.UpdateAsync(currentAdmin.Employee);
-        }
-
-        // 🔥 Purane Admin ke saare sessions turant invalid karo (jaisa tumne kaha tha)
-        await _refreshTokenRepository.RevokeAllByUserIdAsync(currentAdmin.Id, "Admin replaced");
-
-        _logger.LogCritical("ADMIN REPLACED: OldAdminId={OldAdminId}, NewAdminEmail={NewAdminEmail}", currentAdmin.Id, newAdminUser.Email);
-
-        // User row poori tarah delete — login access turant, permanently khatam.
-        // FK "SetNull" configured hai, isliye Employee row safe rahegi, sirf UserId = NULL ho jaayega.
-        await _userRepository.DeleteAsync(currentAdmin.Id);
-
-        // Naye admin ko OTP bhejo — wahi purana mechanism reuse ho raha hai
-        await _otpService.GenerateAndSendOtpAsync(newAdminUser.Id, newAdminUser.Email, OtpPurpose.Registration);
-        return new OtpSentResponseDto { Email = newAdminUser.Email };
+            RequiresApproval = false,
+            NextAdminEmail = newAdminUser.Email
+        };
     }
 
     // ============================================================
@@ -848,10 +1056,26 @@ _logger.LogInformation("Admin OTP sent: UserId={UserId}, Email={Email}, Role={Ro
         await _userRepository.UpdateAsync(user);
         await _refreshTokenRepository.RevokeAllByUserIdAsync(user.Id, "Password changed");
 
-        _logger.LogInformation("Password changed: UserId={UserId}, Email={Email}", user.Id, user.Email);
-
         try { await _emailService.SendPasswordChangedEmailAsync(user.Email); }
         catch { }
+    }
+
+    // ============================================================
+    // 19. ROLE STATUS (public, landing page ke liye)
+    // Admin: koi active admin. Manager: manager role wala active user.
+    // Employee: kam se kam ek active employee record.
+    // ============================================================
+    public async Task<(bool AdminExists, bool ManagerExists, bool EmployeeExists)> GetRoleStatusAsync()
+    {
+        var admins = await _userRepository.GetAdminsAsync();
+        var adminExists = admins.Any(a => a.IsActive);
+
+        var manager = await _userRepository.GetManagerAsync();
+        var managerExists = manager != null && manager.IsActive;
+
+        var employeeExists = await _userRepository.HasActiveEmployeeAsync();
+
+        return (adminExists, managerExists, employeeExists);
     }
 
     // ============================================================
@@ -909,7 +1133,7 @@ _logger.LogInformation("Admin OTP sent: UserId={UserId}, Email={Email}, Role={Ro
         return (raw, HashToken(raw));
     }
 
-    // SHA256 hash
+    // SHA256 Hash Helper
     private static string HashToken(string rawToken)
     {
         using var sha = SHA256.Create();
@@ -917,11 +1141,108 @@ _logger.LogInformation("Admin OTP sent: UserId={UserId}, Email={Email}, Role={Ro
         return Convert.ToHexString(bytes);
     }
 
+    // Password Verification Helper
     private bool VerifyPassword(string password, string hash)
     {
         if (string.IsNullOrEmpty(hash))
             return false;
 
         return BCrypt.Net.BCrypt.Verify(password, hash);
+    }
+
+    // 18+ and <100 check
+    private static void ValidateAdultDateOfBirth(DateTime dateOfBirth)
+    {
+        var today = DateTime.UtcNow;
+        var minAllowedYear = today.Year - 100;
+        var maxAllowedYear = today.Year - 18;
+
+        if (dateOfBirth.Year < minAllowedYear)
+            throw new BadRequestException($"Date of birth year must be {minAllowedYear} or later.");
+
+        if (dateOfBirth.Year > maxAllowedYear)
+            throw new BadRequestException("You must be at least 18 years old to register.");
+    }
+
+    // Emial and phone are must unique
+    private async Task EnsureContactAvailableAsync(string email, string phoneNumber, params int?[]? ownEmployeeIds)
+    {
+        var own = (ownEmployeeIds ?? Array.Empty<int?>())
+        .Where(id => id.HasValue)
+        .Select(id => id!.Value)
+        .ToHashSet();
+
+        var byEmail = await _employeeRepository.GetByEmailAsync(email ?? string.Empty);
+        if (byEmail != null && !own.Contains(byEmail.Id))
+            throw new ConflictException("This email is already associated with an employee record. Please use another email or contact support.");
+
+        var byPhone = await _employeeRepository.GetByPhoneNumberAsync(phoneNumber);
+        if (byPhone != null && !own.Contains(byPhone.Id))
+            throw new ConflictException("This phone number is already registered with another account.");
+    }
+
+    // Unverified account ke login par OTP bhejna. Mail fail ya cooldown ho to bhi chup rehta hai,
+    // user OTP page ke Resend button se dobara bhej sakta hai.
+    private async Task SendVerificationOtpQuietlyAsync(User user)
+    {
+        try
+        {
+            await _otpService.GenerateAndSendOtpAsync(user.Id, user.Email, OtpPurpose.Registration);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Could not send verification OTP on login for UserId={UserId}", user.Id);
+        }
+    }
+
+    // Galat OTP ginna. Limit paar hone par OTP delete. true = OTP ab invalid ho gaya.
+    private async Task<bool> RegisterFailedOtpAttemptAsync(OtpCode otp)
+    {
+        otp.FailedAttempts++;
+
+        if (otp.FailedAttempts >= _otpSetting.MaxFailedAttempts)
+        {
+            await _otpRepository.DeleteOtpCodeAsync(otp.Id);
+            return true;
+        }
+
+        await _otpRepository.UpdateOtpCodeAsync(otp);
+        return false;
+    }
+
+    // Unverified account poora hatao (Employee row bhi), taaki orphan row email/phone na roke
+    private async Task RemoveUnverifiedAccountAsync(User user)
+    {
+        var employee = user.Employee ?? await _employeeRepository.GetByUserIdAsync(user.Id);
+        if (employee != null)
+            await _employeeRepository.DeleteAsync(employee.Id);
+
+        await _userRepository.DeleteAsync(user.Id);
+    }
+
+    // Naya admin verify ho gaya: ab purane (verified) admin ko hatao.
+    // Pehli baar ke registration mein purana admin hota hi nahi, to kuch nahi hota.
+    private async Task CompleteAdminHandoverAsync(User newAdmin)
+    {
+        var admins = await _userRepository.GetAdminsAsync();
+        var oldAdmin = admins.FirstOrDefault(a => a.IsActive && a.Id != newAdmin.Id);
+        if (oldAdmin == null) return;
+
+        // Employee row 30 din tak rakho (record ke liye)
+        if (oldAdmin.Employee != null)
+        {
+            oldAdmin.Employee.IsActive = false;
+            oldAdmin.Employee.ScheduledForDeletionAt = DateTime.UtcNow.AddDays(10);  // 10 days store data
+            await _employeeRepository.UpdateAsync(oldAdmin.Employee);
+        }
+
+        // Purane admin ke saare sessions turant invalid
+        await _refreshTokenRepository.RevokeAllByUserIdAsync(oldAdmin.Id, "Admin replaced");
+
+        _logger.LogCritical("ADMIN REPLACED: OldAdminId={OldAdminId}, NewAdminId={NewAdminId}", oldAdmin.Id, newAdmin.Id);
+
+        // User row poori tarah delete: login access turant khatam.
+        // FK "SetNull" hai, isliye Employee row safe rahegi, sirf UserId = NULL ho jaayega.
+        await _userRepository.DeleteAsync(oldAdmin.Id);
     }
 }

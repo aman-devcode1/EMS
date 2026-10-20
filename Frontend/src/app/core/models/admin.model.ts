@@ -60,3 +60,9 @@ export interface ChangePasswordDto {
   newPassword: string;
   confirmNewPassword: string;
 }
+
+// Replace Admin — Phase 1/2 response
+export interface ReplaceAdminResponseDto {
+  requiresApproval: boolean;
+  nextAdminEmail: string | null;
+}

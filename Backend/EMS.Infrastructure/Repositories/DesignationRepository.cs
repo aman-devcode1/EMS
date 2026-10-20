@@ -46,4 +46,14 @@ public class DesignationRepository : IDesignationRepository
         _context.Designations.Update(designation);
         await _context.SaveChangesAsync();
     }
+
+    public async Task DeleteAsync(int id)
+    {
+        var designation = await _context.Designations.FindAsync(id);
+        if (designation != null)
+        {
+            _context.Designations.Remove(designation);
+            await _context.SaveChangesAsync();
+        }
+    }
 }

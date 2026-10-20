@@ -43,12 +43,13 @@ export class Navbar {
 
   // 🔥 Role-based sign out
   onSignOut(): void {
+    const redirectUrl = this.authService.getLoginUrl();
     this.authService.logout().subscribe({
       next: () => {
-        this.router.navigate([this.authService.getLoginUrl()]);
+        this.router.navigate([redirectUrl]);
       },
       error: () => {
-        this.router.navigate([this.authService.getLoginUrl()]);
+        this.router.navigate([redirectUrl]);
       }
     });
   }

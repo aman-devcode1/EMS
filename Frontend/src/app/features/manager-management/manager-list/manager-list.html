@@ -1,0 +1,82 @@
+<div class="page-head">
+  <div class="page-head__text">
+    <h1>Managers</h1>
+    <p>Organization manager. Click a row to view details.</p>
+  </div>
+</div>
+
+<!-- ❌ Search Bar hata diya gaya hai -->
+
+<div *ngIf="isLoading" class="hint">Loading…</div>
+
+<div *ngIf="!isLoading && managers.length === 0" class="hint">
+  No manager found.
+</div>
+
+<div class="table-wrap" *ngIf="!isLoading && managers.length > 0">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Manager</th>
+        <th>Email</th>
+        <th>Phone</th>
+        <th>Department</th>
+        <th>Hire Date</th>
+        <th class="col-actions">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let m of managers" class="row-clickable" (click)="openDetail(m)">
+        
+        <td data-label="Manager">
+          <div class="cell-employee">
+            <div class="cell-employee__main">
+              <span class="cell-employee__name">{{ m.fullName }}</span>
+              <svg class="cell-employee__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </div>
+            <span class="cell-employee__sub" *ngIf="m.designation">{{ m.designation }}</span>
+            <span class="cell-employee__sub cell-employee__sub--muted" *ngIf="!m.designation">Designation not assigned</span>
+          </div>
+        </td>
+
+        <td data-label="Email">{{ m.email }}</td>
+        <td data-label="Phone">{{ m.phoneNumber ?? '—' }}</td>
+
+        <td data-label="Department">
+          <span class="badge badge--neutral" *ngIf="m.department">
+            {{ m.department }}
+          </span>
+          <span class="muted" *ngIf="!m.department">Not assigned</span>
+        </td>
+
+        <td data-label="Hire Date">
+          {{ m.hireDate ? (m.hireDate | date:'mediumDate') : '—' }}
+        </td>
+
+        <td data-label="Actions" class="col-actions">
+          <button
+            type="button"
+            class="remove-btn"
+            [disabled]="processingUserId === m.userId"
+            (click)="openDemoteDialog(m, $event)">
+            {{ processingUserId === m.userId ? 'Removing…' : 'Remove' }}
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<app-confirm-dialog
+  [isOpen]="dialogOpen"
+  title="Remove from Manager"
+  [message]="dialogMessage"
+  [boldText]="dialogBoldText"
+  confirmText="Remove"
+  variant="danger"
+  (confirmed)="onDialogConfirm()"
+  (cancelled)="onDialogCancel()">
+</app-confirm-dialog>

@@ -10,6 +10,17 @@
 
   <main class="auth-panel">
     <div class="auth-panel__inner">
+
+      <!-- ✅ Back to Landing Page Link -->
+      <a routerLink="/" class="back-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round" style="width: 16px; height: 16px;">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        Back to portals
+      </a>
+
       <h2>Admin registration</h2>
       <p class="auth-form__hint">We'll email a one-time code to activate the account.</p>
 
@@ -112,7 +123,6 @@
 
       <p class="auth-form__switch">
         Already registered? <a routerLink="/admin/login">Sign in</a><br />
-        Not an admin? <a routerLink="/employee/register">Register here as employee</a>
       </p>
     </div>
   </main>

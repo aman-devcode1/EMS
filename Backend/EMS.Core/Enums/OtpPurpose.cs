@@ -4,5 +4,6 @@ public enum OtpPurpose
 {
     Registration = 1,
     Login = 2,
-    PasswordReset = 3
+    PasswordReset = 3,
+    AdminReplacementApproval  = 4
 }

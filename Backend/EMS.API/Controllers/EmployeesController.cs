@@ -25,7 +25,7 @@ public class EmployeesController : ControllerBase
     // 1. GET ALL EMPLOYEES (Pagination + Search + Sort + Filter)
     // ============================================================
     [HttpGet]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Manager")]
     [ProducesResponseType(typeof(ApiResponse<PagedResult<EmployeeResponseDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll([FromQuery] EmployeeQueryParams queryParams)
     {
@@ -152,7 +152,9 @@ public class EmployeesController : ControllerBase
         return Ok(new ApiResponse<EmployeeResponseDto>
         {
             Success = true,
-            Message = "Employee active status toggled successfully.",
+            Message = result.IsActive
+                        ? "Employee activated successfully."
+                        : "Employee deactivated successfully.",
             Data = result
         });
     }

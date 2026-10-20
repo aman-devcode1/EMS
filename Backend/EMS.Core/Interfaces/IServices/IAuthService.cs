@@ -38,7 +38,7 @@ public interface IAuthService
     Task<OtpSentResponseDto> ResendOtpAsync(ResendOtpDto resendOtpDto);
 
     // Replace old admin with new one
-    Task<OtpSentResponseDto> ReplaceAdminAsync(int currentAdminUserId, ReplaceAdminDto replaceAdminDto);
+    Task<ReplaceAdminResponseDto> ReplaceAdminAsync(int currentAdminUserId, ReplaceAdminDto replaceAdminDto);
 
     Task<OtpSentResponseDto> ForgotPasswordAsync(ForgotPasswordDto forgotPasswordDto);
 
@@ -55,4 +55,6 @@ public interface IAuthService
     Task<bool> UpdateAdminProfileAsync(int userId, UpdateAdminProfileDto updateAdminProfileDto);
 
     Task ChangePasswordAsync(int userId, ChangePasswordDto changePasswordDto);
+
+    Task<(bool AdminExists, bool ManagerExists, bool EmployeeExists)> GetRoleStatusAsync();
 }

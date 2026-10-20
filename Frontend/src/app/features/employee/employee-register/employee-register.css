@@ -25,13 +25,11 @@
   content: '';
   position: absolute;
   inset: 0;
-  background-image: repeating-linear-gradient(
-    to bottom,
-    transparent 0,
-    transparent 35px,
-    var(--line-on-ink) 35px,
-    var(--line-on-ink) 36px
-  );
+  background-image: repeating-linear-gradient(to bottom,
+      transparent 0,
+      transparent 35px,
+      var(--line-on-ink) 35px,
+      var(--line-on-ink) 36px);
   opacity: 0.5;
   pointer-events: none;
 }
@@ -88,6 +86,25 @@
   width: 100%;
   max-width: 400px;
   animation: authRise 0.5s ease-out;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--slate);
+  text-decoration: none;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.back-link:hover {
+  color: var(--ink);
+  text-decoration: none;
+  transform: translateX(-3px);
+  /* Hover pe thoda left shift hoga */
 }
 
 .auth-panel__inner h2 {

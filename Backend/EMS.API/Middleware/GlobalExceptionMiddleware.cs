@@ -2,6 +2,8 @@ using System.Net;
 using System.Text.Json;
 using EMS.Core.Common;
 using EMS.Core.Exceptions;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 
 namespace EMS.API.Middleware;
 
@@ -33,29 +35,39 @@ public class GlobalExceptionMiddleware
 
     private Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
-        // 🔍 Exception के Type के हिसाब से Status Code Decide करो
         var (statusCode, message) = exception switch
         {
-            // 🔥 Custom Exceptions (400, 404, 409) को पहचानो
-            BadRequestException badRequest => ((int)HttpStatusCode.BadRequest, badRequest.Message),
-            NotFoundException notFound => ((int)HttpStatusCode.NotFound, notFound.Message),
-            ConflictException conflict => ((int)HttpStatusCode.Conflict, conflict.Message),
-            ExternalServiceException externalService => ((int)HttpStatusCode.ServiceUnavailable, externalService.Message),
+            // Hamare apne exceptions: message seedha user ko
+            BadRequestException ex => ((int)HttpStatusCode.BadRequest, ex.Message),
+            NotFoundException ex => ((int)HttpStatusCode.NotFound, ex.Message),
+            ConflictException ex => ((int)HttpStatusCode.Conflict, ex.Message),
+            ExternalServiceException ex => ((int)HttpStatusCode.ServiceUnavailable, ex.Message),
+            UnauthorizedAccessException ex => ((int)HttpStatusCode.Unauthorized, ex.Message),
 
-            // 🔥 Unauthorized (401) — Optional
-            UnauthorizedAccessException unauthorized => ((int)HttpStatusCode.Unauthorized, unauthorized.Message),
+            // Database ke pehchane hue karan
+            DbUpdateConcurrencyException => ((int)HttpStatusCode.Conflict,
+                "This record was changed by someone else while you were editing. Please reload and try again."),
+            DbUpdateException ex when IsUniqueViolation(ex) => ((int)HttpStatusCode.Conflict, BuildDuplicateMessage(ex)),
+            DbUpdateException => ((int)HttpStatusCode.InternalServerError,
+                "The data could not be saved to the database. Please check the values and try again."),
+            SqlException => ((int)HttpStatusCode.ServiceUnavailable,
+                "The database is not reachable right now. Please try again in a moment."),
 
-            // 🔥 बाकी सारी Exceptions (जो हमने नहीं पकड़ी) → 500 Internal Server Error
+            // Request / timeout ke karan
+            BadHttpRequestException or JsonException => ((int)HttpStatusCode.BadRequest,
+                "The request data is not in a valid format. Please check the fields and try again."),
+            TimeoutException => ((int)HttpStatusCode.GatewayTimeout,
+                "The operation took too long and timed out. Please try again."),
+
+            // Baaki sab: Development mein asli message, Production mein reference ID
             _ => ((int)HttpStatusCode.InternalServerError, _env.IsDevelopment()
                 ? exception.Message
-                : "An unexpected error occurred. Please try again later.")
+                : $"An unexpected server error occurred. If it keeps happening, share this reference with support: {context.TraceIdentifier}")
         };
 
-        // 🔹 Response को JSON Format में Return करो    
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = statusCode;
 
-        // ✅ ApiResponse Wrapper में Response भेजो (जो Client (Angular) को Standard JSON मिले)
         var response = new ApiResponse<object>
         {
             Success = false,
@@ -63,17 +75,24 @@ public class GlobalExceptionMiddleware
             Data = null
         };
 
-        // 🔥 सिर्फ Development Environment में Stack Trace भेजो (Production में नहीं!)
-        // if (_env.IsDevelopment())
-        // {
-        //     //  response.StackTrace = exception.StackTrace;
-        // }
-
         var jsonResponse = JsonSerializer.Serialize(response, new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         });
 
         return context.Response.WriteAsync(jsonResponse);
+    }
+
+    private static bool IsUniqueViolation(DbUpdateException ex) =>
+        ex.InnerException is SqlException sql && (sql.Number == 2601 || sql.Number == 2627);
+
+    private static string BuildDuplicateMessage(DbUpdateException ex)
+    {
+        var text = ex.InnerException?.Message ?? string.Empty;
+        if (text.Contains("Email", StringComparison.OrdinalIgnoreCase))
+            return "This email is already registered with another account. Please use a different email.";
+        if (text.Contains("Phone", StringComparison.OrdinalIgnoreCase))
+            return "This phone number is already registered with another account. Please use a different number.";
+        return "A record with the same unique value already exists. Please use different details.";
     }
 }

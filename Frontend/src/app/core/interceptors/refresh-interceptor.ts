@@ -2,12 +2,20 @@ import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { catchError, filter, switchMap, take, throwError } from 'rxjs';
 import { AuthService } from '../services/auth';
+import { AUTH_ENDPOINTS } from '../constants/auth-endpoints';
 
 export const refreshInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
 
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
+      const isAuthEndpoint = AUTH_ENDPOINTS.some((url) => req.url.includes(url));
+
+      // ✅ Auth endpoints skip karo — errorInterceptor unka toast handle karega
+      if (isAuthEndpoint) {
+        return throwError(() => error);
+      }
+
       // Only handle 401, and skip the refresh endpoint itself
       if (error.status !== 401 || req.url.includes('/refresh-token')) {
         return throwError(() => error);
@@ -16,10 +24,9 @@ export const refreshInterceptor: HttpInterceptorFn = (req, next) => {
       // Another refresh already in progress → wait for its result
       if (authService.isRefreshing) {
         return authService.refreshTokenSubject.pipe(
-          filter((res) => res !== undefined),   // ✅ null pass-through (for 204)
+          filter((res) => res !== undefined),
           take(1),
           switchMap((res) => {
-            // 204 (null) → session gone, mark failure
             if (!res?.data?.accessToken) {
               const err: any = new Error('Session expired.');
               err.isRefreshFailure = true;
@@ -37,9 +44,8 @@ export const refreshInterceptor: HttpInterceptorFn = (req, next) => {
       // Trigger new refresh
       return authService.refreshToken().pipe(
         switchMap((res) => {
-          // 204 (null) → no session, mark as refresh failure
           if (!res?.data?.accessToken) {
-            const err: any = new Error('Session expired.');
+            const err: any = new Error('Session expired. Please sign in again.');
             err.isRefreshFailure = true;
             return throwError(() => err);
           }

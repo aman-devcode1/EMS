@@ -150,6 +150,7 @@
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -199,6 +200,24 @@
   background: var(--brass);
   box-shadow: 0 0 0 3px rgba(185, 134, 61, 0.2);
   flex-shrink: 0;
+}
+
+/* =========================================================
+   OTP CODE FIELD (Phase 2)
+   ========================================================= */
+.replace-panel__inner .otp-code-field {
+  font-family: var(--font-mono);
+  font-size: 1.6rem;
+  letter-spacing: 0.6em;
+  text-align: center;
+  padding-left: 0.6em;
+  font-variant-numeric: tabular-nums;
+}
+
+.replace-panel__inner .otp-code-field::placeholder {
+  color: var(--slate-light);
+  opacity: 0.4;
+  letter-spacing: 0.15em;
 }
 
 /* =========================================================

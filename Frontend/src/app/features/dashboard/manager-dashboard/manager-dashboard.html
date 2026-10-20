@@ -1,1 +1,41 @@
-<p>manager-dashboard works!</p>
+<div class="welcome-banner">
+  <div class="welcome-text">
+    <span class="welcome-eyebrow">Manager Console</span>
+    <h1>{{ greeting }}, {{ managerName }}</h1>
+    <p>Here's a quick snapshot of your team.</p>
+  </div>
+</div>
+
+<h2 class="section-title">Quick Actions</h2>
+
+<div class="quick-actions">
+  <!-- Link to Employee List -->
+  <a routerLink="/manager/employees" class="action-card">
+    <div class="action-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+        <circle cx="9" cy="7" r="4"></circle>
+      </svg>
+    </div>
+    <div class="action-body">
+      <span class="action-title">View Employees</span>
+      <span class="action-desc">See all staff members</span>
+    </div>
+    <span class="action-arrow">→</span>
+  </a>
+
+  <!-- Link to Manager Profile -->
+  <a routerLink="/manager/profile" class="action-card">
+    <div class="action-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+        <circle cx="12" cy="7" r="4"></circle>
+      </svg>
+    </div>
+    <div class="action-body">
+      <span class="action-title">My Profile</span>
+      <span class="action-desc">Manage your account details</span>
+    </div>
+    <span class="action-arrow">→</span>
+  </a>
+</div>

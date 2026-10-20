@@ -10,6 +10,8 @@ public interface IUserRepository
     Task UpdateAsync(User user);
     Task DeleteAsync(int id);
     Task<bool> ExistsByEmailAsync(string email);
+    Task<List<User>> GetAdminsAsync();
     Task<User?> GetAdminAsync();
     Task<User?> GetManagerAsync();
+    Task<bool> HasActiveEmployeeAsync();
 }

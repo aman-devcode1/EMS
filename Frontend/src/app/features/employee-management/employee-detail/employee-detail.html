@@ -4,24 +4,38 @@
 
     <!-- HEAD ROW -->
     <div class="detail-head">
-        <div class="detail-head__text">
-            <a routerLink="/admin/employees" class="back-btn" aria-label="Back to list">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
-                    stroke-linejoin="round">
-                    <line x1="19" y1="12" x2="5" y2="12"></line>
-                    <polyline points="12 19 5 12 12 5"></polyline>
-                </svg>
-                <span>Back to Employees</span>
-            </a>
-            <h1>Employee Details</h1>
-            <p>Complete personnel record</p>
-        </div>
 
-        <!-- ACTION BUTTONS -->
-        <div class="detail-head__actions" *ngIf="viewMode === 'details'">
-            <button type="button" class="btn btn-primary" (click)="openEditForm()">
-                Edit Professional Details
-            </button>
+        <!-- 1. Back Button (Top Left) -->
+        <a routerLink="/admin/employees" class="back-btn" aria-label="Back to list">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            <span>Back to Employees</span>
+        </a>
+
+        <!-- 2. Title & Actions Row -->
+        <div class="detail-title-row">
+            <div class="detail-title-group">
+                <h1>Employee Details</h1>
+                <p>Complete personnel record</p>
+            </div>
+
+            <!-- ACTION BUTTONS -->
+            <div class="detail-head__actions" *ngIf="viewMode === 'details'">
+
+                <!-- Activate / Deactivate Toggle -->
+                <button type="button" class="btn" [class.btn-outline]="employee.isActive"
+                    [class.btn-primary]="!employee.isActive" (click)="toggleEmployeeStatus()" [disabled]="isSaving">
+                    {{ employee.isActive ? 'Deactivate Employee' : 'Activate Employee' }}
+                </button>
+
+                <!-- Edit Button -->
+                <button type="button" class="btn btn-primary" (click)="openEditForm()">
+                    Edit Professional Details
+                </button>
+            </div>
         </div>
     </div>
 

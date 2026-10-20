@@ -4,10 +4,11 @@ import {
 } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { BehaviorSubject, throwError, Observable, EMPTY, Subject } from 'rxjs';
-import { catchError, filter, switchMap, take, takeUntil } from 'rxjs/operators';
+import { BehaviorSubject, throwError, EMPTY, Subject } from 'rxjs';
+import { catchError, filter, switchMap, take } from 'rxjs/operators';
 import { AuthService } from '../services/auth';
 import { ToastService } from '../services/toast';
+import { TokenService } from '../services/token'; // 👈 Import TokenService
 
 // ============================================================
 // MODULE-LEVEL STATE
@@ -16,7 +17,6 @@ type RefreshState = 'idle' | 'refreshing' | 'logged-out';
 
 let refreshState: RefreshState = 'idle';
 const newTokenSubject = new BehaviorSubject<string | null>(null);
-
 const logout$ = new Subject<void>();
 
 // Auth endpoints — inpe 401 handle nahi karna
@@ -40,12 +40,6 @@ const AUTH_ENDPOINTS = [
   '/employees/resend-otp',
 ];
 
-function getLoginUrl(role: string | null): string {
-  if (role === 'Admin' || role === 'Manager') return '/admin/login';
-  if (role === 'Employee') return '/employee/login';
-  return '/admin/login';
-}
-
 // ============================================================
 // INTERCEPTOR
 // ============================================================
@@ -53,6 +47,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const router = inject(Router);
   const toastService = inject(ToastService);
+  const tokenService = inject(TokenService); // 👈 Inject TokenService
 
   const token = authService.getAccessToken();
   const isAuthEndpoint = AUTH_ENDPOINTS.some((url) => req.url.includes(url));
@@ -65,21 +60,18 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
       if ((error as any).isRefreshFailure) {
-        triggerLogout(authService, router, toastService);
+        triggerLogout(authService, router, toastService, tokenService);
         return EMPTY;
       }
 
-      // Not 401, or auth endpoint → pass through
       if (error.status !== 401 || isAuthEndpoint) {
         return throwError(() => error);
       }
 
-      // Already logged out → silently fail (prevents duplicate logouts)
       if (refreshState === 'logged-out') {
         return EMPTY;
       }
 
-      // Wait for refresh to complete
       if (authService.isRefreshing) {
         return authService.refreshTokenSubject.pipe(
           filter((res) => res !== null),
@@ -95,18 +87,12 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         );
       }
 
-      // First 401 → Start refresh process
       return authService.refreshToken().pipe(
         switchMap((res: any) => {
           const newToken = res?.data?.accessToken;
           if (!newToken) {
-            triggerLogout(authService, router, toastService);
+            triggerLogout(authService, router, toastService, tokenService);
             return EMPTY;
-          }
-
-          // Save new refresh token if server rotated it
-          if (res.data.refreshToken) {
-            localStorage.setItem('refreshToken', res.data.refreshToken);
           }
 
           refreshState = 'idle';
@@ -119,7 +105,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
           );
         }),
         catchError(() => {
-          triggerLogout(authService, router, toastService);
+          triggerLogout(authService, router, toastService, tokenService);
           return EMPTY;
         }),
       );
@@ -130,24 +116,30 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 // ============================================================
 // LOGOUT HANDLER
 // ============================================================
-function triggerLogout(authService: AuthService, router: Router, toastService: ToastService): void {
-  // Guard: only trigger once per burst
+function triggerLogout(
+  authService: AuthService,
+  router: Router,
+  toastService: ToastService,
+  tokenService: TokenService
+): void {
   if (refreshState === 'logged-out') return;
 
   refreshState = 'logged-out';
 
-  const role = authService.getCurrentUserRole();
-  const loginUrl = getLoginUrl(role);
+  // ✅ Yahan hum 'ems_last_role' use kar rahe hain, current token nahi
+  const lastRole = tokenService.getLastRole();
+  let target = '/'; // Default landing page
+
+  if (lastRole === 'Admin' || lastRole === 'Manager') target = '/admin/login';
+  else if (lastRole === 'Employee') target = '/employee/login';
 
   authService.logout();
 
-  toastService.showWarning('Session expired. Please log in again.');
-  router.navigate([loginUrl], {
+  // toastService.showWarning('Session expired. Please log in again.');
+  router.navigate([target], {
     queryParams: { reason: 'session-expired' },
   });
 
-  // Reset after login page has had time to mount.
-  // Login page hits auth endpoints (excluded above), so this window is safe.
   setTimeout(() => {
     if (refreshState === 'logged-out') {
       refreshState = 'idle';

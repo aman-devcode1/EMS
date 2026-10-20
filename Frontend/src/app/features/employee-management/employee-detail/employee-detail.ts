@@ -88,16 +88,16 @@ export class EmployeeDetail implements OnInit {
   }
 
   loadMasterData(): void {
-    if (this.departments.length === 0) {
-      this.masterDataService.getDepartments().subscribe({
-        next: (res) => (this.departments = res.data ?? []),
-      });
-    }
-    if (this.designations.length === 0) {
-      this.masterDataService.getDesignations().subscribe({
-        next: (res) => (this.designations = res.data ?? []),
-      });
-    }
+    // ✅ Single call for both dropdowns
+    this.masterDataService.getAllMasterData().subscribe({
+      next: (res: any) => {
+        this.departments = res.data?.departments ?? [];
+        this.designations = res.data?.designations ?? [];
+      },
+      error: () => {
+        this.toastService.showError('Failed to load dropdown data.');
+      }
+    });
   }
 
   // ============================================================
@@ -184,6 +184,30 @@ export class EmployeeDetail implements OnInit {
     }
     return '';
   }
+
+  toggleEmployeeStatus(): void {
+    if (!this.employee) return;
+
+    this.isSaving = true; // Button ko disable karne ke liye
+
+    this.employeeService.toggleActive(this.employee.id).subscribe({
+      next: (res) => {
+        this.toastService.showSuccess(res.message);
+
+        // Local state update karo bina page reload kiye
+        if (this.employee) {
+          this.employee.isActive = res.data.isActive;
+        }
+
+        this.isSaving = false;
+      },
+      error: () => {
+        this.toastService.showError('Failed to update employee status.');
+        this.isSaving = false;
+      }
+    });
+  }
+
 
   getDepartmentName(): string {
     if (this.employee?.department) return this.employee.department;

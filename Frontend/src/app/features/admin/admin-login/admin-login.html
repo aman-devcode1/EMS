@@ -10,8 +10,19 @@
 
   <main class="auth-panel">
     <div class="auth-panel__inner">
-      <h2>Admin sign-in</h2>
-      <p class="auth-form__hint">Enter your credentials — a one-time code follows by email.</p>
+
+      <!-- ✅ Back to Landing Page Link -->
+      <a routerLink="/" class="back-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round" style="width: 16px; height: 16px;">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        Back to portals
+      </a>
+
+      <h2>{{ isManagerMode ? 'Manager Sign-in' : 'Admin sign-in' }}</h2>
+      <p class="auth-form__hint">{{ isManagerMode ? 'Enter your credentials to access the manager console.' : 'Enter your credentials — a one-time code follows by email.' }}</p>
 
       <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" autocomplete="off" novalidate>
 
@@ -20,16 +31,8 @@
         <!-- ============================================ -->
         <div class="form-group">
           <label for="email">Email</label>
-          <input
-            id="email"
-            [name]="emailFieldName"
-            type="text"
-            formControlName="email"
-            class="form-control"
-            [class.invalid]="isInvalid('email')"
-            placeholder="you@company.com"
-            autocomplete="off"
-            readonly
+          <input id="email" [name]="emailFieldName" type="text" formControlName="email" class="form-control"
+            [class.invalid]="isInvalid('email')" placeholder="you@company.com" autocomplete="current-password" readonly
             onfocus="this.removeAttribute('readonly')" />
           <div class="field-error" *ngIf="isInvalid('email')">
             {{ getError('email') }}
@@ -42,20 +45,10 @@
         <div class="form-group">
           <label for="password">Password</label>
           <div class="password-wrapper">
-            <input
-              id="password"
-              [name]="passwordFieldName"
-              [type]="showPassword ? 'text' : 'password'"
-              formControlName="password"
-              class="form-control"
-              [class.invalid]="isInvalid('password')"
-              autocomplete="off"
-              readonly
-              onfocus="this.removeAttribute('readonly')" />
-            <button
-              type="button"
-              class="password-toggle"
-              (click)="togglePassword()"
+            <input id="password" [name]="passwordFieldName" [type]="showPassword ? 'text' : 'password'"
+              formControlName="password" class="form-control" [class.invalid]="isInvalid('password')" autocomplete="off"
+              readonly onfocus="this.removeAttribute('readonly')" />
+            <button type="button" class="password-toggle" (click)="togglePassword()"
               [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'">
               {{ showPassword ? 'Hide' : 'Show' }}
             </button>
@@ -70,19 +63,9 @@
         <!-- ============================================ -->
         <div class="form-group">
           <label for="phoneNumber">Phone number</label>
-          <input
-            id="phoneNumber"
-            [name]="phoneFieldName"
-            type="text"
-            formControlName="phoneNumber"
-            class="form-control"
-            [class.invalid]="isInvalid('phoneNumber')"
-            placeholder="10-digit Indian number"
-            inputmode="numeric"
-            maxlength="10"
-            autocomplete="off"
-            readonly
-            onfocus="this.removeAttribute('readonly')"
+          <input id="phoneNumber" [name]="phoneFieldName" type="text" formControlName="phoneNumber" class="form-control"
+            [class.invalid]="isInvalid('phoneNumber')" placeholder="10-digit Indian number" inputmode="numeric"
+            maxlength="10" autocomplete="off" readonly onfocus="this.removeAttribute('readonly')"
             (input)="onPhoneInput($event)" />
           <div class="field-error" *ngIf="isInvalid('phoneNumber')">
             {{ getError('phoneNumber') }}
@@ -90,18 +73,17 @@
         </div>
 
         <div class="auth-form__forgot">
-          <a routerLink="/forgot-password">Forgot password?</a>
+          <a [routerLink]="['/forgot-password']" [queryParams]="{ role: isManagerMode ? 'manager' : 'admin' }">Forgot password?</a>
         </div>
 
         <button type="submit" [disabled]="isLoading" class="btn btn-primary mt-3">
-          {{ isLoading ? 'Sending OTP…' : 'Sign in & send OTP' }}
+          {{ isLoading ? 'Sending OTP…' : (isManagerMode ? 'Sign in as Manager' : 'Sign in as Admin') }}
         </button>
       </form>
 
-      <p class="auth-form__switch">
-        New administrator? <a routerLink="/admin/register">Register here</a><br />
-        Not an admin? <a routerLink="/employee/login">Sign in as employee</a>
-      </p>
+      <!-- <p class="auth-form__switch" *ngIf="!isManagerMode">
+        New administrator? <a routerLink="/admin/register">Register here</a>
+      </p> -->
     </div>
   </main>
 </div>

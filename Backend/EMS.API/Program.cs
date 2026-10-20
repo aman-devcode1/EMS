@@ -14,13 +14,10 @@ using EMS.Core.Interfaces.ExternalServices;
 using EMS.Infrastructure.ExternalServices;
 using Microsoft.Extensions.FileProviders;
 using System.Security.Claims;
-using Polly;
-using Polly.Extensions.Http;
 using System.Net;
 using System.Net.Sockets;
 using EMS.Core.Configuration;
-using Microsoft.AspNetCore.RateLimiting;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -54,7 +51,7 @@ builder.Services.AddControllers();
 // ============================================================
 var allowedOrigins = builder.Configuration
     .GetSection("CorsSettings:AllowedOrigins")
-    .Get<string[]>() 
+    .Get<string[]>()
     ?? new[] { "http://localhost:4200" };   // fallback for safety
 
 builder.Services.AddCors(options =>
@@ -105,22 +102,59 @@ builder.Services.AddHealthChecks().AddDbContextCheck<AppDbContext>(
     tags: new[] { "db", "sql", "critical" }
 );
 
-// Rate Limiter
+// Rate Limiter: har client IP ka apna counter (pehle har policy ka ek hi global counter tha)
 builder.Services.AddRateLimiter(options =>
 {
-    options.AddFixedWindowLimiter("auth-strict", opt =>
-    {
-        opt.Window = TimeSpan.FromMinutes(1);
-        opt.PermitLimit = 5;
-        opt.QueueLimit = 0;
-    });
-    options.AddFixedWindowLimiter("auth-refresh", opt =>
-    {
-        opt.Window = TimeSpan.FromMinutes(1);
-        opt.PermitLimit = 10;
-        opt.QueueLimit = 0;
-    });
+    static string ClientKey(HttpContext context) =>
+        context.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+
+    // Login: 5 try in 1 min (a/c to Ip)
+    options.AddPolicy("auth-strict", context =>
+        RateLimitPartition.GetFixedWindowLimiter(ClientKey(context), _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 5,
+            Window = TimeSpan.FromMinutes(1),
+            QueueLimit = 0
+        })
+    );
+
+    // Refresh Token
+    options.AddPolicy("auth-refresh", context =>
+        RateLimitPartition.GetFixedWindowLimiter(ClientKey(context), _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 10,
+            Window = TimeSpan.FromMinutes(1),
+            QueueLimit = 0
+        })
+    );
+
+    // Otp emial sends the endpoints (to stop burn the spam / quota)
+    options.AddPolicy("otp-send", context =>
+        RateLimitPartition.GetFixedWindowLimiter(ClientKey(context), _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 10,
+            Window = TimeSpan.FromMinutes(1),
+            QueueLimit = 0
+        })
+    );
+
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    // Same api response format in 429 + Retry after, so that frontend can show the real reason.
+    options.OnRejected = async (context, token) =>
+    {
+        var http = context.HttpContext;
+        var seconds = context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter)
+            ? (int)Math.Ceiling(retryAfter.TotalSeconds) : 60;
+
+        http.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        http.Response.Headers.RetryAfter = seconds.ToString();
+        http.Response.ContentType = "application/json";
+        await http.Response.WriteAsync(
+            $"{{\"success\":false,\"message\":\"Too many attempts. Please try again in {seconds} seconds.\",\"data\":null}}",
+            token
+        );
+    };
 });
 
 // HTTP CLIENT (Brevo/SendGrid के लिए)
@@ -191,6 +225,31 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             RoleClaimType = "role",
 
             ClockSkew = TimeSpan.FromSeconds(jwtSettings.ClockSkewSeconds)
+        };
+
+        // Check in every request DB (user exists + active)
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = async context =>
+            {
+                var userIdClaim = context.Principal?.FindFirst("uid")?.Value
+                    ?? context.Principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+                if (!int.TryParse(userIdClaim, out var userId))
+                {
+                    context.Fail("Invalid token Claims.");
+                    return;
+                }
+
+                var userRepo = context.HttpContext.RequestServices
+                    .GetRequiredService<IUserRepository>();
+                var user = await userRepo.GetByIdAsync(userId);
+
+                if (user == null || !user.IsActive)
+                {
+                    context.Fail("User no longer exists or is inactive.");
+                }
+            }
         };
     });
 

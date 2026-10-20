@@ -2,17 +2,49 @@
 /* PAGE HEAD                                                    */
 /* ============================================================ */
 .page-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
   margin-bottom: 28px;
 }
 
-.page-head h1 {
+.page-head__text h1 {
   font-size: 1.6rem;
+  margin: 0 0 4px 0;
 }
 
-.page-head p {
-  color: var(--slate);
-  margin: 4px 0 0 0;
+.page-head__text p {
+  margin: 0;
   font-size: 0.9rem;
+  color: var(--slate);
+  color: color 0.2s ease;
+}
+
+.text-green {
+  color: var(--success-text) !important;
+  font-weight: 600;
+}
+
+.text-red {
+  color: var(--danger-text) !important;
+  font-weight: 600;
+}
+
+/* View Toggle Buttons (Activated / Deactivated) */
+.view-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.view-tab-btn {
+  min-width: 160px;
+  justify-content: center;
+}
+
+.view-tab-btn:disabled {
+  opacity: 1;
+  cursor: not-allowed;
+  box-shadow: none;
 }
 
 .hint {
@@ -23,6 +55,50 @@
 
 .table-wrap {
   width: 100%;
+}
+
+/* ============================================================ */
+/* SEARCH BAR                                                   */
+/* ============================================================ */
+.search-container {
+  position: relative;
+  margin-bottom: 24px;
+  max-width: 450px;
+  /* Search bar thoda chauda kiya hai for better UX */
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  color: var(--slate-light);
+  pointer-events: none;
+}
+
+.search-input {
+  width: 100%;
+  padding: 10px 12px 10px 38px;
+  /* Left padding icon ke liye */
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  color: var(--ink);
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--brass);
+  box-shadow: 0 0 0 3px rgba(185, 134, 61, 0.12);
+}
+
+.search-input::placeholder {
+  color: var(--slate-light);
 }
 
 /* ============================================================ */
@@ -47,11 +123,12 @@
 }
 
 .data-table th {
-  font-weight: 600;
-  background: var(--paper);
-  color: var(--ink);
+  font-weight: 700;
+  background: var(--brass-dark);
+  color: #ffffff;
+  /* ✅ Text color white kar diya taaki clear dikhe */
   text-transform: uppercase;
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   letter-spacing: 0.06em;
   white-space: nowrap;
 }
@@ -63,7 +140,6 @@
 /* ============================================================ */
 /* ROW — clickable + hover hint (accent bar + chevron)          */
 /* ============================================================ */
-/* Row — clickable + hover hint */
 .row-clickable {
   cursor: pointer;
   transition: background-color 0.15s ease;
@@ -77,9 +153,6 @@
   background: rgba(185, 134, 61, 0.08);
 }
 
-/* Accent bar — first cell pe, kyunki tr pe position: relative
-   tables me reliably kaam nahi karta (extra anonymous cell
-   inject ho jata hai aur columns shift ho jate hain). */
 .row-clickable td:first-child {
   position: relative;
 }
@@ -173,12 +246,6 @@
 }
 
 .data-table th.col-actions {
-  text-align: left;
-  padding-left: 8px;
-}
-
-/* Header ko bhi right-align karo — warna misaligned lagega */
-.data-table th.col-actions {
   text-align: right;
   padding-right: 20px;
 }
@@ -231,43 +298,7 @@
 }
 
 /* ============================================================ */
-/* ICON BUTTON (kept for reuse on other pages)                  */
-/* ============================================================ */
-.icon-btn {
-  width: 34px;
-  height: 34px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  color: var(--slate);
-  cursor: pointer;
-  transition:
-    color 0.15s ease,
-    background-color 0.15s ease,
-    border-color 0.15s ease,
-    transform 0.1s ease;
-}
-
-.icon-btn svg {
-  width: 16px;
-  height: 16px;
-}
-
-.icon-btn:hover {
-  color: var(--brass-dark);
-  background: rgba(185, 134, 61, 0.08);
-  border-color: var(--brass);
-}
-
-.icon-btn:active {
-  transform: scale(0.95);
-}
-
-/* ============================================================ */
-/* TABLET — 1024px                                              */
+/* TABLET & MOBILE RESPONSIVENESS                               */
 /* ============================================================ */
 @media (max-width: 1024px) {
 
@@ -287,40 +318,23 @@
   }
 }
 
-/* ============================================================ */
-/* SMALL TABLET / LARGE MOBILE — 900px                          */
-/* ============================================================ */
-@media (max-width: 900px) {
-
-  .data-table th,
-  .data-table td {
-    padding: 11px 12px;
-    font-size: 0.83rem;
-  }
-
-  .col-actions {
-    width: 60px;
-    padding-right: 6px;
-  }
-
-  .cell-employee {
-    min-width: 130px;
-  }
-}
-
-/* ============================================================ */
-/* MOBILE — 768px — table converts to cards                     */
-/* ============================================================ */
 @media (max-width: 768px) {
   .page-head {
+    flex-direction: column;
+    gap: 16px;
     margin-bottom: 20px;
   }
 
-  .page-head h1 {
-    font-size: 1.4rem;
+  .view-actions {
+    width: 100%;
+    flex-wrap: wrap;
   }
 
-  /* Table reset */
+  .view-tab-btn {
+    flex: 1;
+  }
+
+  /* Table to Cards on Mobile */
   .data-table {
     border: none;
     background: transparent;
@@ -339,7 +353,6 @@
     width: 100%;
   }
 
-  /* Row = card */
   .data-table tr {
     background: var(--paper-raised);
     border: 1px solid var(--line);
@@ -354,12 +367,10 @@
     border-color: var(--brass);
   }
 
-  /* Mobile me accent bar left edge pe hamesha visible nahi — hatao */
   .row-clickable td:first-child::before {
     display: none;
   }
 
-  /* Cell — label left, value right */
   .data-table td {
     border: none;
     padding: 8px 0;
@@ -374,7 +385,6 @@
     border-bottom: 1px dashed var(--line);
   }
 
-  /* Pseudo-label from data-label */
   .data-table td::before {
     content: attr(data-label);
     font-weight: 600;
@@ -386,24 +396,20 @@
     flex-shrink: 0;
   }
 
-  /* Employee cell align to right */
   .cell-employee {
     align-items: flex-end;
     min-width: 0;
   }
 
-  /* Chevron hamesha visible on mobile — hover possible nahi */
   .cell-employee__chevron {
     opacity: 0.6;
     transform: translateX(0);
   }
 
-  /* Email word-break */
   .data-table td[data-label="Email"] {
     word-break: break-word;
   }
 
-  /* Actions row — full width, right aligned */
   .col-actions {
     width: 100%;
     justify-content: flex-end;
@@ -418,16 +424,9 @@
   }
 }
 
-/* ============================================================ */
-/* SMALL MOBILE — 480px                                         */
-/* ============================================================ */
 @media (max-width: 480px) {
   .page-head h1 {
-    font-size: 1.25rem;
-  }
-
-  .page-head p {
-    font-size: 0.85rem;
+    font-size: 1.35rem;
   }
 
   .data-table tr {
@@ -451,7 +450,6 @@
     font-size: 0.72rem;
   }
 
-  /* Toggle slightly smaller on very small screens */
   .toggle-btn {
     width: 40px;
     height: 22px;
@@ -466,23 +464,5 @@
 
   .toggle-btn.on .toggle-knob {
     transform: translateX(18px);
-  }
-}
-
-/* ============================================================ */
-/* TINY MOBILE — 360px                                          */
-/* ============================================================ */
-@media (max-width: 360px) {
-  .data-table tr {
-    padding: 10px 12px;
-  }
-
-  .data-table td {
-    padding: 6px 0;
-    font-size: 0.8rem;
-  }
-
-  .cell-employee__name {
-    font-size: 0.85rem;
   }
 }

@@ -9,4 +9,5 @@ public interface IDesignationService
     Task<DesignationDto> CreateAsync(CreateUpdateDesignationDto dto);
     Task<DesignationDto> UpdateAsync(int id, CreateUpdateDesignationDto dto);
     Task<DesignationDto> ToggleActiveAsync(int id);
+    Task DeleteAsync(int id);
 }

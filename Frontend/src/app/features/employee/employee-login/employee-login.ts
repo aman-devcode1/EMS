@@ -6,6 +6,8 @@ import { EmployeeService } from '../../../core/services/employee';
 import { TokenService } from '../../../core/services/token';
 import { ToastService } from '../../../core/services/toast';
 import { AuthService } from '../../../core/services/auth';
+import { email } from '@angular/forms/signals';
+import { Register } from '../../auth/register/register';
 
 @Component({
   selector: 'app-employee-login',
@@ -43,14 +45,14 @@ export class EmployeeLogin {
   }
 
   ngOnInit(): void {
-  this.route.queryParams.subscribe((params: any) => {
-    if (params['reason'] === 'session-expired') {
-      this.toastService.showInfo(
-        'Your session expired. Please sign in again.',
-      );
-    }
-  });
-}
+    this.route.queryParams.subscribe((params: any) => {
+      if (params['reason'] === 'session-expired') {
+        this.toastService.showInfo(
+          'Your session expired. Please sign in again.',
+        );
+      }
+    });
+  }
 
   isInvalid(field: string): boolean {
     const c = this.loginForm.get(field);
@@ -122,8 +124,16 @@ export class EmployeeLogin {
         // Redirect to Employee Dashboard
         this.router.navigate(['/employee/dashboard']);
       },
-      error: () => {
+      error: (err) => {
         this.isLoading = false;
+        if (err?.status === 409) {
+          this.router.navigate(['/employee/verify-otp'], {
+            queryParams: {
+              email: this.loginForm.value.email,
+              mode: 'register',
+            },
+          });
+        }
         // Error Interceptor khud handle karega
       }
     });

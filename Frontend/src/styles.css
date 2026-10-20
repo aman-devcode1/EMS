@@ -270,13 +270,18 @@ a:hover {
 
 .btn-outline {
     background: transparent;
-    border-color: var(--line);
+    border-color: var(--ink);
     color: var(--ink);
 }
 
 .btn-outline:hover:not(:disabled) {
     border-color: var(--brick);
     color: var(--brick);
+}
+
+.btn-danger {
+    background: var(--brick);
+    color: #fff;
 }
 
 .btn-link {

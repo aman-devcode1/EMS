@@ -7,6 +7,7 @@ import {
   DesignationDto,
   CreateUpdateDepartmentDto,
   CreateUpdateDesignationDto,
+  MasterDataResponse,
 } from '../models/master-data.model';
 import { API_ENDPOINTS } from '../constants/api-endpoints';
 
@@ -14,19 +15,22 @@ import { API_ENDPOINTS } from '../constants/api-endpoints';
   providedIn: 'root',
 })
 export class MasterDataService {
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   // ============================================================
-  // DEPARTMENTS
+  // Get ALL Master Data in one call
   // ============================================================
-  getDepartments(includeInactive: boolean = false): Observable<ApiResponse<DepartmentDto[]>> {
+  getAllMasterData(includeInactive: boolean = false): Observable<ApiResponse<MasterDataResponse>> {
     const params = new HttpParams().set('includeInactive', includeInactive.toString());
-    return this.http.get<ApiResponse<DepartmentDto[]>>(
-      API_ENDPOINTS.ADMIN.DEPARTMENTS,
+    return this.http.get<ApiResponse<MasterDataResponse>>(
+      `${API_ENDPOINTS.ADMIN.MASTER_DATA}/all`,
       { params }
     );
   }
 
+  // ============================================================
+  // DEPARTMENTS (Create, Update, Toggle, Delete)
+  // ============================================================
   createDepartment(data: CreateUpdateDepartmentDto): Observable<ApiResponse<DepartmentDto>> {
     return this.http.post<ApiResponse<DepartmentDto>>(
       API_ENDPOINTS.ADMIN.DEPARTMENTS,
@@ -48,17 +52,15 @@ export class MasterDataService {
     );
   }
 
-  // ============================================================
-  // DESIGNATIONS
-  // ============================================================
-  getDesignations(includeInactive: boolean = false): Observable<ApiResponse<DesignationDto[]>> {
-    const params = new HttpParams().set('includeInactive', includeInactive.toString());
-    return this.http.get<ApiResponse<DesignationDto[]>>(
-      API_ENDPOINTS.ADMIN.DESIGNATIONS,
-      { params }
+  deleteDepartment(id: number): Observable<ApiResponse<object>> {
+    return this.http.delete<ApiResponse<object>>(
+      `${API_ENDPOINTS.ADMIN.DEPARTMENTS}/${id}`
     );
   }
 
+  // ============================================================
+  // DESIGNATIONS (Create, Update, Toggle, Delete)
+  // ============================================================
   createDesignation(data: CreateUpdateDesignationDto): Observable<ApiResponse<DesignationDto>> {
     return this.http.post<ApiResponse<DesignationDto>>(
       API_ENDPOINTS.ADMIN.DESIGNATIONS,
@@ -77,6 +79,12 @@ export class MasterDataService {
     return this.http.patch<ApiResponse<DesignationDto>>(
       `${API_ENDPOINTS.ADMIN.DESIGNATIONS}/${id}/toggle-active`,
       {}
+    );
+  }
+
+  deleteDesignation(id: number): Observable<ApiResponse<object>> {
+    return this.http.delete<ApiResponse<object>>(
+      `${API_ENDPOINTS.ADMIN.DESIGNATIONS}/${id}`
     );
   }
 }

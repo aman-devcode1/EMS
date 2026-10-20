@@ -4,6 +4,7 @@ export interface DepartmentDto {
   name: string;
   description?: string | null;
   isActive: boolean;
+  isAssigned: boolean;
   createdAt: string;
 }
 
@@ -12,6 +13,7 @@ export interface DesignationDto {
   name: string;
   description?: string | null;
   isActive: boolean;
+  isAssigned: boolean;
   createdAt: string;
 }
 
@@ -24,4 +26,9 @@ export interface CreateUpdateDepartmentDto {
 export interface CreateUpdateDesignationDto {
   name: string;
   description?: string | null;
+}
+
+export interface MasterDataResponse {
+  departments: DepartmentDto[];
+  designations: DesignationDto[];
 }

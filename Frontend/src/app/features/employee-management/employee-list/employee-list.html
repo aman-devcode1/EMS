@@ -1,13 +1,57 @@
+<!-- ============================================================ -->
+<!-- PAGE HEADER (With View Toggles)                              -->
+<!-- ============================================================ -->
 <div class="page-head">
-  <h1>Employees</h1>
-  <p>All employees. Click a row to view details.</p>
+  <div class="page-head__text">
+    <h1>Employees</h1>
+    <!-- Text dynamic karo -->
+    <p>
+      <span [class.text-green]="currentView === 'active'" [class.text-red]="currentView === 'deactivated'">
+        {{ currentView === 'active' ? 'Activated employees.' : 'Deactivated employees.' }} </span>
+      Click a row to view details.
+    </p>
+  </div>
+
+  <!-- ✅ NEW: View Toggle Buttons -->
+  <div class="view-actions">
+    <button class="btn view-tab-btn" [class.btn-primary]="currentView === 'active'"
+      [class.btn-outline]="currentView !== 'active'" [disabled]="currentView === 'active'" (click)="setView('active')">
+      Activated Employees
+    </button>
+    <button class="btn view-tab-btn" [class.btn-primary]="currentView === 'deactivated'"
+      [class.btn-outline]="currentView !== 'deactivated'" [disabled]="currentView === 'deactivated'"
+      (click)="setView('deactivated')">
+      Deactivated Employees
+    </button>
+  </div>
+</div>
+
+<!-- Search Bar -->
+<div class="search-container">
+  <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+    stroke-linejoin="round">
+    <circle cx="11" cy="11" r="8"></circle>
+    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+  </svg>
+  <input type="text" class="search-input" placeholder="Search employees by name, email, department, designation, etc..."
+    [(ngModel)]="searchTerm" (ngModelChange)="applyFilter()" />
 </div>
 
 <!-- Loading -->
 <div *ngIf="isLoading" class="hint">Loading…</div>
 
 <!-- Empty -->
-<div *ngIf="!isLoading && employees.length === 0" class="hint">No employees yet.</div>
+<div *ngIf="!isLoading && employees.length === 0" class="hint">
+  <!-- ✅ Active Tab ke liye message -->
+  <ng-container *ngIf="currentView === 'active'">
+    No active employees found. Check the deactivated employees.
+  </ng-container>
+
+  <!-- ✅ Deactivated Tab ke liye message -->
+  <ng-container *ngIf="currentView === 'deactivated'">
+    No deactivated employees found. Check the active employees.
+  </ng-container>
+</div>
 
 <!-- Table -->
 <div class="table-wrap" *ngIf="!isLoading && employees.length > 0">
@@ -17,7 +61,7 @@
         <th>Employee</th>
         <th>Email</th>
         <th>Department</th>
-        <th>Status</th>
+        <th>Hire Date</th> <!-- ✅ Status ki jagah Hire Date -->
         <th class="col-actions">Actions</th>
       </tr>
     </thead>
@@ -55,22 +99,18 @@
           <span class="muted" *ngIf="!emp.department">Not assigned</span>
         </td>
 
-        <!-- STATUS -->
-        <td data-label="Status">
-          <span class="badge" [class.badge--success]="emp.isActive" [class.badge--danger]="!emp.isActive">
-            {{ emp.isActive ? 'Active' : 'Inactive' }}
-          </span>
+        <!-- ✅ HIRE DATE (Replaces Status) -->
+        <td data-label="Hire Date">
+          {{ emp.hireDate ? (emp.hireDate | date:'mediumDate') : '—' }}
         </td>
 
         <!-- ACTIONS -->
         <td data-label="Actions" class="col-actions">
-          <button type="button" class="toggle-btn" [class.on]="emp.role === 'Manager'" [class.disabled]="!canToggle()"
-            [disabled]="!canToggle() || processingUserId === emp.userId" (click)="openPromoteDialog(emp, $event)"
-            [attr.aria-label]="
-              emp.role === 'Manager' ? 'Demote from Manager' : 'Promote to Manager'
-            " [title]="
-              emp.role === 'Manager' ? 'Demote from Manager' : 'Promote to Manager'
-            ">
+          <!-- Promoted Toggle (Same as before) -->
+          <button type="button" class="toggle-btn" [class.on]="emp.role === 'Manager'"
+            [class.disabled]="!canToggle(emp)" [disabled]="!canToggle(emp) || processingUserId === emp.userId"
+            (click)="openPromoteDialog(emp, $event)"
+            [attr.aria-label]="emp.role === 'Manager' ? 'Demote from Manager' : 'Promote to Manager'">
             <span class="toggle-knob"></span>
           </button>
         </td>
@@ -79,7 +119,7 @@
   </table>
 </div>
 
-<!-- Confirm Dialog -->
+<!-- Confirm Dialog (Same rahega) -->
 <app-confirm-dialog [isOpen]="dialogOpen" [title]="dialogTitle" [message]="dialogMessage" [boldText]="dialogBoldText"
   [confirmText]="dialogConfirmText" [variant]="dialogVariant" (confirmed)="onDialogConfirm()"
   (cancelled)="onDialogCancel()">

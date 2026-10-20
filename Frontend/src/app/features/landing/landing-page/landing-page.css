@@ -1,0 +1,297 @@
+/* ============================================================
+   LANDING — public portal picker
+   Global tokens (--ink, --brass, --line, ...) styles.css se aate hain.
+   ============================================================ */
+
+:host {
+  display: block;
+  min-height: 100vh;
+  background: var(--paper);
+}
+
+.landing {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- Top bar ---------- */
+.landing-top {
+  display: flex;
+  align-items: center;
+  padding: 18px clamp(16px, 4vw, 48px);
+  background: var(--paper-raised);
+  border-bottom: 1px solid var(--line);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-mark {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1.5px solid var(--brass);
+  background: rgba(185, 134, 61, 0.12);
+  color: var(--brass);
+  display: grid;
+  place-items: center;
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-size: 0.8rem;
+  letter-spacing: 0.03em;
+}
+
+.brand-name {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* ---------- Hero ---------- */
+.hero {
+  position: relative;
+  text-align: center;
+  padding: clamp(56px, 9vw, 96px) 20px clamp(40px, 6vw, 60px);
+  overflow: hidden;
+  animation: rise 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(22, 35, 59, 0.08) 1px, transparent 1px);
+  background-size: 24px 24px;
+  mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%);
+  pointer-events: none;
+}
+
+.hero > * {
+  position: relative;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--brass-dark);
+}
+
+.eyebrow::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--brass);
+  box-shadow: 0 0 0 3px rgba(185, 134, 61, 0.2);
+}
+
+.hero h1 {
+  margin: 0 0 16px;
+  font-size: clamp(2rem, 4.5vw, 3rem);
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.lede {
+  max-width: 520px;
+  margin: 0 auto;
+  font-size: 1.05rem;
+  color: var(--slate);
+}
+
+/* ---------- Portal cards ---------- */
+.portals {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 24px;
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 clamp(16px, 4vw, 48px) 64px;
+}
+
+.portal {
+  display: flex;
+  flex-direction: column;
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow:
+    0 1px 2px rgba(22, 35, 59, 0.04),
+    0 12px 28px rgba(22, 35, 59, 0.06);
+  transition:
+    transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
+  animation: rise 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+.portal:hover {
+  transform: translateY(-6px);
+  border-color: rgba(185, 134, 61, 0.45);
+  box-shadow:
+    0 2px 4px rgba(22, 35, 59, 0.05),
+    0 24px 48px rgba(22, 35, 59, 0.12);
+}
+
+.portal-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 24px;
+  color: #fff;
+  background: var(--ink);
+}
+
+.portal--manager .portal-head {
+  background: var(--brass-dark);
+}
+
+.portal--employee .portal-head {
+  background: var(--forest);
+}
+
+.portal-head h2 {
+  margin: 0;
+  font-size: 1.3rem;
+  color: #fff;
+}
+
+.portal-icon {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.portal-icon svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: #fff;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.portal-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 22px 24px;
+}
+
+.portal-summary {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--slate);
+}
+
+.portal-points {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.portal-points li {
+  position: relative;
+  padding-left: 22px;
+  font-size: 0.9rem;
+  color: var(--ink);
+}
+
+.portal-points li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--brass);
+  box-shadow: 0 0 0 3px rgba(185, 134, 61, 0.18);
+}
+
+.portal-note {
+  margin: auto 0 0;
+  padding-top: 12px;
+  border-top: 1px dashed var(--line);
+  font-size: 0.8rem;
+  color: var(--slate-light);
+}
+
+.portal-actions {
+  display: flex;
+  gap: 10px;
+  padding: 18px 24px 22px;
+  border-top: 1px solid var(--line);
+  background: #fafaf7;
+}
+
+.portal-actions .btn {
+  flex: 1;
+  text-decoration: none;
+}
+
+.portal-actions .btn:hover {
+  text-decoration: none;
+}
+
+/* ---------- Footer ---------- */
+.landing-footer {
+  margin-top: auto;
+  padding: 0 20px 32px;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--slate-light);
+}
+
+.landing-footer p {
+  margin: 0 0 4px;
+  color: inherit;
+}
+
+/* ---------- Motion ---------- */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---------- Mobile ---------- */
+@media (max-width: 520px) {
+  .portal-actions {
+    flex-direction: column;
+  }
+
+  .portal-head {
+    padding: 20px;
+  }
+
+  .portal-body {
+    padding: 20px;
+  }
+}

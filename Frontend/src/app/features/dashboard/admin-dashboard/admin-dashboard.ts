@@ -14,6 +14,7 @@ import { EmployeeService } from '../../../core/services/employee';
 })
 export class AdminDashboard implements OnInit {
   adminName = 'Admin';
+  greeting = 'Welcome Back';
   totalEmployees = 0;
   totalManagers = 0;
   isLoadingStats = true;
@@ -28,6 +29,12 @@ export class AdminDashboard implements OnInit {
   ngOnInit(): void {
     const name = this.tokenService.getUserName();
     this.adminName = (name && name.trim()) ? name : 'Admin';
+
+    if (sessionStorage.getItem('isFirstLogin') === 'true'){
+      this.greeting = 'Welcome';
+      sessionStorage.removeItem('isFirstLogin');
+    }
+
     this.loadStats();
   }
 

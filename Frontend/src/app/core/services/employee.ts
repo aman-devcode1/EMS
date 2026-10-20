@@ -61,4 +61,8 @@ export class EmployeeService {
   updateProfessionalInfo(id: number, data: UpdateEmployeeProfessionalDto): Observable<ApiResponse<EmployeeResponseDto>> {
     return this.http.put<ApiResponse<EmployeeResponseDto>>(`${API_ENDPOINTS.EMPLOYEE.GET_ALL}/${id}/professional`, data);
   }
+
+  toggleActive(id: number): Observable<ApiResponse<EmployeeResponseDto>> {
+    return this.http.patch<ApiResponse<EmployeeResponseDto>>(`${API_ENDPOINTS.EMPLOYEE.GET_ALL}/${id}/toggle-active`, {});
+  }
 }

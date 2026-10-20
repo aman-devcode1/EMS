@@ -56,16 +56,23 @@ public class RefreshTokenRepository : IRefreshTokenRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task DeleteExpiredTokensAsync()
+        public async Task DeleteExpiredTokensAsync()
     {
-        var cutoff = DateTime.UtcNow.AddDays(-7); // Retain for audit for 7 days
-        var expired = await _context.RefreshTokens
-            .Where(rt => rt.AbsoluteExpiresAt < cutoff)
+        var now = DateTime.UtcNow;
+        var retentionPeriod = now.AddDays(-1); // 1 din pehle ka time
+
+        // ✅ Logic: Un tokens ko delete karo jo Expire ho chuke hain 
+        // YA jo Revoke ho chuke hain aur 1 din se purane hain
+        var tokensToDelete = await _context.RefreshTokens
+            .Where(rt => 
+                rt.AbsoluteExpiresAt < now || 
+                (rt.IsRevoked && rt.RevokedAt < retentionPeriod)
+            )
             .ToListAsync();
 
-        if (expired.Count > 0)
+        if (tokensToDelete.Any())
         {
-            _context.RefreshTokens.RemoveRange(expired);
+            _context.RefreshTokens.RemoveRange(tokensToDelete);
             await _context.SaveChangesAsync();
         }
     }

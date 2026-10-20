@@ -9,4 +9,5 @@ public interface IDesignationRepository
     Task<Designation?> GetByNameAsync(string name);
     Task AddAsync(Designation designation);
     Task UpdateAsync(Designation designation);
+    Task DeleteAsync(int id);
 }

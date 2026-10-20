@@ -1,0 +1,78 @@
+<main class="landing">
+    <header class="landing-top">
+        <div class="brand">
+            <span class="brand-mark" aria-hidden="true">EMS</span>
+            <span class="brand-name">Employee Management System</span>
+        </div>
+    </header>
+
+    <section class="hero">
+        <p class="eyebrow">Internal personnel platform</p>
+        <h1>Welcome to EMS</h1>
+        <p class="lede">Choose your portal to continue. Every role signs in with its own verification.</p>
+    </section>
+
+    <section class="portals" aria-label="Portals">
+        @for (portal of portals; track portal.key; let i = $index) {
+        <article class="portal" [ngClass]="'portal--' + portal.key" [style.animation-delay.ms]="120 + i * 90">
+            <header class="portal-head">
+                <span class="portal-icon" aria-hidden="true">
+                    @switch (portal.icon) {
+                    @case ('shield') {
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6l7-3z" />
+                    </svg>
+                    }
+                    @case ('briefcase') {
+                    <svg viewBox="0 0 24 24">
+                        <rect x="3" y="7" width="18" height="13" rx="2" />
+                        <path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 13h18" />
+                    </svg>
+                    }
+                    @case ('user') {
+                    <svg viewBox="0 0 24 24">
+                        <circle cx="12" cy="8" r="4" />
+                        <path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6" />
+                    </svg>
+                    }
+                    }
+                </span>
+                <h2>{{ portal.title }}</h2>
+            </header>
+
+            <div class="portal-body">
+                <p class="portal-summary">{{ portal.summary }}</p>
+
+                <ul class="portal-points">
+                    @for (point of portal.points; track point) {
+                    <li>{{ point }}</li>
+                    }
+                </ul>
+
+                @if (statusNote(portal); as note) {
+                <p class="portal-note">{{ note }}</p>
+                }
+            </div>
+
+            <footer class="portal-actions">
+                @if (canSignIn(portal)) {
+                <a class="btn btn-outline" [routerLink]="portal.loginLink" [queryParams]="portal.loginQueryParams">Sign in</a>
+                } @else {
+                <button type="button" class="btn btn-outline" disabled>Sign in</button>
+                }
+
+                @if (canRegister(portal)) {
+                <a class="btn btn-primary" [routerLink]="portal.registerLink">
+                    {{ portal.registerLabel }}
+                </a>
+                }
+            </footer>
+        </article>
+        }
+    </section>
+
+    <footer class="landing-footer">
+        <p>Need access? Contact your system administrator.</p>
+        <p>&copy; {{ year }} Aman-EMS</p>
+    </footer>
+</main>

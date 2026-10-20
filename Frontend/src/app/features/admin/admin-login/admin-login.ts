@@ -15,10 +15,11 @@ import { AdminService } from '../../../core/services/admin';
   templateUrl: './admin-login.html',
   styleUrl: './admin-login.css',
 })
-export class AdminLogin {
+export class AdminLogin implements OnInit {
   loginForm: FormGroup;
   isLoading = false;
   showPassword = false;
+  isManagerMode = false;
 
   // Random field names — browser suggestions block karne ke liye
   emailFieldName = `f_${Math.random().toString(36).substring(2)}`;
@@ -30,6 +31,7 @@ export class AdminLogin {
     private adminService: AdminService,
     private toastService: ToastService,
     private router: Router,
+    private route: ActivatedRoute,
   ) {
     this.loginForm = this.fb.group({
       email: ['', [
@@ -49,13 +51,18 @@ export class AdminLogin {
     });
   }
 
-  // ngOnInit(): void {
-  //   this.route.queryParams.subscribe((params: any) => {
-  //     if (params['reason'] === 'session-expired') {
-  //       this.toastService.showInfo('Your session expired. Please sign in again.');
-  //     }
-  //   });
-  // }
+  ngOnInit(): void {
+    this.route.queryParams.subscribe((params: any) => {
+      // Manager Miode Check
+      if (params['role'] === 'manager') {
+        this.isManagerMode = true;
+      }
+      // Session Expired
+      if (params['reason'] === 'session-expired') {
+        this.toastService.showInfo('Your session expired. Please sign in again.');
+      }
+    });
+  }
 
   // ============================================================
   // HELPERS — for template (cleaner HTML)
@@ -120,9 +127,17 @@ export class AdminLogin {
           queryParams: { email: this.loginForm.value.email, mode: 'login' },
         });
       },
-      error: () => {
+      error: (err) => {
         this.isLoading = false;
-        // Error interceptor backend का message toast में दिखाएगा
+        if (err?.status === 409) {
+          this.router.navigate(['/admin/verify-otp'], {
+            queryParams: {
+              email: this.loginForm.value.email,
+              mode: 'register',
+            },
+          });
+        }
+        // Error interceptor backend (message toast)
       },
     });
   }

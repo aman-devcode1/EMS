@@ -1,10 +1,16 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { finalize, Subscription } from 'rxjs';
 import { ToastService } from '../../../core/services/toast';
-import { finalize } from 'rxjs';
 import { AuthService } from '../../../core/services/auth';
+import { sanitizeOtp } from '../../../core/utils/otp.util';
+
+// Backend OtpSettings.ResendCooldownSeconds = 60 se match karta hai.
+const RESEND_COOLDOWN_SECONDS = 60;
+// Resend fail hone par chhota cooldown, taaki user dobara try kar sake.
+const RESEND_FAILED_COOLDOWN_SECONDS = 5;
 
 @Component({
   selector: 'app-reset-password',
@@ -13,17 +19,17 @@ import { AuthService } from '../../../core/services/auth';
   templateUrl: './reset-password.html',
   styleUrl: './reset-password.css',
 })
-export class ResetPassword implements OnInit {
+export class ResetPassword implements OnInit, OnDestroy {
   resetForm: FormGroup;
-  email: string = '';
+  email = '';
   isLoading = false;
   isResending = false;
   resendCooldown = 0;
-  // 🔥 Success ke baad form ki jagah confirmation dikhate hain — role pata nahi
-  // hota (Employee/Admin/Manager), isliye ek specific login page par force-navigate
-  // nahi karte, dono options dikha dete hain.
   resetSuccess = false;
   resetRole: 'Admin' | 'Manager' | 'Employee' | '' = '';
+
+  private cooldownTimer: ReturnType<typeof setInterval> | null = null;
+  private paramsSub?: Subscription;
 
   constructor(
     private fb: FormBuilder,
@@ -42,14 +48,18 @@ export class ResetPassword implements OnInit {
     );
   }
 
-  ngOnInit() {
-    this.route.queryParams.subscribe((params) => {
+  ngOnInit(): void {
+    this.paramsSub = this.route.queryParams.subscribe((params) => {
       this.email = params['email'] || '';
-      // Email na mile (seedha URL khola gaya) to forgot-password page par bhej do
       if (!this.email) {
         this.router.navigate(['/forgot-password']);
       }
     });
+  }
+
+  ngOnDestroy(): void {
+    this.paramsSub?.unsubscribe();
+    if (this.cooldownTimer) clearInterval(this.cooldownTimer);
   }
 
   passwordMatchValidator(formGroup: FormGroup) {
@@ -58,70 +68,67 @@ export class ResetPassword implements OnInit {
     return password === confirmPassword ? null : { passwordMismatch: true };
   }
 
-  onCodeInput(event: Event) {
-  const input = event.target as HTMLInputElement;
-  let value = input.value.replace(/\D/g, '').substring(0, 6);
-  input.value = value;
-  this.resetForm.get('code')?.setValue(value, { emitEvent: false });
-}
+  onCodeInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const value = sanitizeOtp(input.value);
+    input.value = value;
+    this.resetForm.get('code')?.setValue(value, { emitEvent: false });
+  }
 
-  onSubmit() {
+  onSubmit(): void {
     if (this.resetForm.invalid) {
       this.toastService.showError('Please fill in all fields correctly.');
       this.resetForm.markAllAsTouched();
       return;
     }
 
-    const rawCode = this.resetForm.value.code ?? '';
-    const cleanCode = rawCode.replace(/\D/g, '');
-
     const payload = {
       email: this.email,
-      code: cleanCode,
+      code: sanitizeOtp(this.resetForm.value.code),
       newPassword: this.resetForm.value.newPassword,
       confirmNewPassword: this.resetForm.value.confirmNewPassword,
     };
-    
+
     this.isLoading = true;
     this.authService.resetPassword(payload)
-    .pipe(finalize(() => this.isLoading = false))
-    .subscribe({
-      next: (response) => {
-        this.resetSuccess = true;
-        this.resetRole = response.data.role;
-        this.toastService.showSuccess(response.message);
-      },
-      error: () => {
-        this.isLoading = false;
-        // Error Interceptor khud toast dikha dega (e.g. "Invalid or expired reset code.")
-      },
-    });
+      .pipe(finalize(() => (this.isLoading = false)))
+      .subscribe({
+        next: (response) => {
+          this.resetSuccess = true;
+          this.resetRole = response.data.role;
+          this.toastService.showSuccess(response.message);
+        },
+        // Error toast interceptor dikhata hai.
+        error: () => {},
+      });
   }
 
-  // 🔥 Yahan "resend" asal mein forgot-password endpoint ko dobara call karta hai —
-  // reset-password flow mein user already active hai, isliye generic resend-otp
-  // (jo sirf unverified/registration users ke liye hai) yahan kaam nahi karega.
-  resendCode() {
-    if (this.resendCooldown > 0) return;
+  // Reset flow mein resend asal mein forgot-password endpoint ko call karta hai.
+  resendCode(): void {
+    if (this.resendCooldown > 0 || this.isResending) return;
 
     this.isResending = true;
-    this.authService.forgotPassword({ email: this.email }).subscribe({
-      next: (res) => {
-        this.isResending = false;
-        this.toastService.showSuccess(res.message);
+    this.authService.forgotPassword({ email: this.email })
+      .pipe(finalize(() => (this.isResending = false)))
+      .subscribe({
+        next: (res) => {
+          this.toastService.showSuccess(res.message);
+          this.startCooldown(RESEND_COOLDOWN_SECONDS);
+        },
+        // Error toast interceptor dikhata hai. Button thodi der baad enable ho jayega.
+        error: () => this.startCooldown(RESEND_FAILED_COOLDOWN_SECONDS),
+      });
+  }
 
-        this.resendCooldown = 30;
-        const interval = setInterval(() => {
-          this.resendCooldown--;
-          if (this.resendCooldown <= 0) {
-            clearInterval(interval);
-          }
-        }, 1000);
-      },
-      error: () => {
-        this.isResending = false;
-        this.resendCooldown = 5;
-      },
-    });
+  private startCooldown(seconds: number): void {
+    if (this.cooldownTimer) clearInterval(this.cooldownTimer);
+    this.resendCooldown = seconds;
+    this.cooldownTimer = setInterval(() => {
+      this.resendCooldown--;
+      if (this.resendCooldown <= 0 && this.cooldownTimer) {
+        clearInterval(this.cooldownTimer);
+        this.cooldownTimer = null;
+      }
+    }, 1000);
   }
 }

@@ -13,6 +13,7 @@ export const API_ENDPOINTS = {
   },
 
   ADMIN: {
+    STATUS: '/api/admin/status',
     REGISTER: '/api/admin/register', // Post -> AdminRegisterDto
     LOGIN: '/api/admin/login', // Post -> AdminLoginDto
     VERIFY_LOGIN_OTP: '/api/admin/verify-login-otp', // Post -> VerifyOtpDto
@@ -25,6 +26,7 @@ export const API_ENDPOINTS = {
     CHANGE_PASSWORD: '/api/admin/change-password',
     DEPARTMENTS: '/api/admin/departments',
     DESIGNATIONS: '/api/admin/designations',
+    MASTER_DATA: '/api/admin/master-data',
   },
 
   EMPLOYEE: {

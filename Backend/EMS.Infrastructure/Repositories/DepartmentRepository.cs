@@ -46,4 +46,14 @@ public class DepartmentRepository : IDepartmentRepository
         _context.Departments.Update(department);
         await _context.SaveChangesAsync();
     }
+
+    public async Task DeleteAsync(int id)
+    {
+        var department = await _context.Departments.FindAsync(id);
+        if (department != null)
+        {
+            _context.Departments.Remove(department);
+            await _context.SaveChangesAsync();
+        }
+    }
 }

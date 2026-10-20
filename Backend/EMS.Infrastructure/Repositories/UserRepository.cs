@@ -86,10 +86,29 @@ public class UserRepository : IUserRepository
     }
 
     // ============================================================
+    // 7b. GET ADMINS (replace ke dauran verified aur pending dono ho sakte hain)
+    // ============================================================
+    public async Task<List<User>> GetAdminsAsync()
+    {
+        return await _context.Users
+            .Include(u => u.Employee)
+            .Where(u => u.Role == RoleType.Admin)
+            .ToListAsync();
+    }
+
+    // ============================================================
     // 8. GET MANAGER
     // ============================================================
     public Task<User?> GetManagerAsync()
     {
         return _context.Users.FirstOrDefaultAsync(u => u.Role == RoleType.Manager);
+    }
+
+    // ============================================================
+    // 9. Employee Activation
+    // ============================================================
+    public Task<bool> HasActiveEmployeeAsync()
+    {
+        return _context.Users.AnyAsync(u => u.Role == RoleType.Employee && u.IsActive);
     }
 }

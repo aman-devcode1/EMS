@@ -14,6 +14,7 @@ import { EmployeeService } from '../../../core/services/employee';
 })
 export class EmployeeDashboard implements OnInit {
   employee?: EmployeeResponseDto;
+  greeting = 'Welcome Back';
   isLoading = true;
   loadFailed = false;
 
@@ -23,6 +24,11 @@ export class EmployeeDashboard implements OnInit {
   ) { }
 
   ngOnInit(): void {
+    if (sessionStorage.getItem('isFirstLogin') === 'true') {
+      this.greeting = 'Welcome';
+      sessionStorage.removeItem('isFirstLogin');
+    }
+
     this.loadProfile();
   }
 

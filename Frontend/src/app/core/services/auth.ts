@@ -152,6 +152,7 @@ export class AuthService {
 
   clearLocalSession(): void {
     this.tokenService.clearAccessToken();
+    this.tokenService.clearLastRole();
     this.refreshFailed = false;
     this.isRefreshing = false;
     this.refreshTokenSubject = new Subject();

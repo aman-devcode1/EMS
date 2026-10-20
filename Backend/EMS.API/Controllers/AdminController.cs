@@ -9,6 +9,7 @@ using System.Security.Claims;
 using EMS.Core.DTOs.MasterData;
 using EMS.Core.DTOs.Employee;
 using EMS.API.Helper;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace EMS.API.Controllers;
 
@@ -33,6 +34,7 @@ public class AdminController : ControllerBase
     // 1. ADMIN REGISTER (सिर्फ एक बार - Secret API) - OTP Send
     // ============================================================
     [HttpPost("register")]
+    [EnableRateLimiting("otp-send")]
     [AllowAnonymous]
     public async Task<IActionResult> RegisterAdmin([FromBody] AdminRegisterDto adminRegisterDto)
     {
@@ -49,6 +51,7 @@ public class AdminController : ControllerBase
     // 2. ADMIN / Manager LOGIN Step 1: Send OTP not Token
     // ============================================================
     [HttpPost("login")]
+    [EnableRateLimiting("otp-send")]
     [AllowAnonymous]
     public async Task<IActionResult> LoginAdmin([FromBody] AdminLoginDto adminLoginDto)
     {
@@ -109,6 +112,7 @@ public class AdminController : ControllerBase
     // 5. Resend Otp 
     // ============================================================
     [HttpPost("resend-otp")]
+    [EnableRateLimiting("otp-send")]
     [AllowAnonymous]
     public async Task<IActionResult> ResendOtp([FromBody] ResendOtpDto resendOtpDto)
     {
@@ -121,24 +125,65 @@ public class AdminController : ControllerBase
         });
     }
 
+    // // ============================================================
+    // // 6. REPLACE ADMIN (Sirf current Admin hi kar sakta hai)
+    // // ============================================================
+    // [HttpPost("replace-admin")]
+    // [Authorize(Roles = "Admin")]
+    // public async Task<IActionResult> ReplaceAdmin([FromBody] ReplaceAdminDto replaceAdminDto)
+    // {
+    //     var userIdClaim = User.FindFirst("uid") ?? User.FindFirst(ClaimTypes.NameIdentifier);
+    //     if (userIdClaim == null)
+    //         return Unauthorized(new ApiResponse<object> { Success = false, Message = "User ID not found in token." });
+
+    //     var currentAdminId = int.Parse(userIdClaim.Value);
+    //     var result = await _authService.ReplaceAdminAsync(currentAdminId, replaceAdminDto);
+
+    //     return Ok(new ApiResponse<OtpSentResponseDto>
+    //     {
+    //         Success = true,
+    //         Message = "New admin registered. An OTP has been sent to their email for verification. You have been logged out from all devices.",
+    //         Data = result
+    //     });
+    // }    
+
     // ============================================================
-    // 6. REPLACE ADMIN (Sirf current Admin hi kar sakta hai)
+    // 6. REPLACE ADMIN — 2-Phase
+    // Phase 1: Approval OTP to A
+    // Phase 2: Verify approval + Create B + B's OTP
     // ============================================================
     [HttpPost("replace-admin")]
     [Authorize(Roles = "Admin")]
+    [EnableRateLimiting("otp-send")]
     public async Task<IActionResult> ReplaceAdmin([FromBody] ReplaceAdminDto replaceAdminDto)
     {
         var userIdClaim = User.FindFirst("uid") ?? User.FindFirst(ClaimTypes.NameIdentifier);
         if (userIdClaim == null)
-            return Unauthorized(new ApiResponse<object> { Success = false, Message = "User ID not found in token." });
+            return Unauthorized(new ApiResponse<object>
+            {
+                Success = false,
+                Message = "Your session has ended. Please sign in again."
+            });
 
         var currentAdminId = int.Parse(userIdClaim.Value);
         var result = await _authService.ReplaceAdminAsync(currentAdminId, replaceAdminDto);
 
-        return Ok(new ApiResponse<OtpSentResponseDto>
+        // ✅ Phase 1: Approval OTP sent to A
+        if (result.RequiresApproval)
+        {
+            return Ok(new ApiResponse<ReplaceAdminResponseDto>
+            {
+                Success = true,
+                Message = "A 6-digit approval code has been sent to your email. Please enter it to confirm the admin replacement.",
+                Data = result
+            });
+        }
+
+        // ✅ Phase 2: B created, B's OTP sent
+        return Ok(new ApiResponse<ReplaceAdminResponseDto>
         {
             Success = true,
-            Message = "New admin registered. An OTP has been sent to their email for verification. You have been logged out from all devices.",
+            Message = "Approval confirmed. A new admin has been registered and an OTP has been sent to their email. You will remain the active admin until they verify.",
             Data = result
         });
     }
@@ -147,12 +192,12 @@ public class AdminController : ControllerBase
     // 7. GET MY PROFILE (Admin)
     // ============================================================
     [HttpGet("me")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Manager")]
     public async Task<IActionResult> GetMyProfile()
     {
         var userIdClaim = User.FindFirst("uid") ?? User.FindFirst(ClaimTypes.NameIdentifier);
         if (userIdClaim == null)
-            return Unauthorized(new ApiResponse<object> { Success = false, Message = "User ID not found in token." });
+            return Unauthorized(new ApiResponse<object> { Success = false, Message = "Your session has ended. Please sign in again." });
         var userId = int.Parse(userIdClaim.Value);
 
         var profile = await _authService.GetAdminProfileAsync(userId);
@@ -169,7 +214,7 @@ public class AdminController : ControllerBase
     // 8. UPDATE MY PROFILE (Admin)
     // ============================================================
     [HttpPut("me")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Manager")]
     public async Task<IActionResult> UpdateMyProfile([FromBody] UpdateAdminProfileDto dto)
     {
         var userIdClaim = User.FindFirst("uid") ?? User.FindFirst(ClaimTypes.NameIdentifier);
@@ -193,7 +238,7 @@ public class AdminController : ControllerBase
     // 9. CHANGE PASSWORD (Admin)
     // ============================================================
     [HttpPost("change-password")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Manager")]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
     {
         var userIdClaim = User.FindFirst("uid") ?? User.FindFirst(ClaimTypes.NameIdentifier);
@@ -324,6 +369,7 @@ public class AdminController : ControllerBase
         });
     }
 
+
     // ============================================================
     // 17. DESIGNATIONS — CREATE
     // ============================================================
@@ -373,7 +419,62 @@ public class AdminController : ControllerBase
     }
 
     // ============================================================
-    // 20. UPDATE EMPLOYEE PROFESSIONAL INFO
+    // 20. DEPARTMENTS — DELETE
+    // ============================================================
+    [HttpDelete("departments/{id:int}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> DeleteDepartment(int id)
+    {
+        await _departmentService.DeleteAsync(id);
+        return Ok(new ApiResponse<object>
+        {
+            Success = true,
+            Message = "Department deleted successfully."
+        });
+    }
+
+    // ============================================================
+    // 21. DESIGNATIONS — DELETE
+    // ============================================================
+    [HttpDelete("designations/{id:int}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> DeleteDesignation(int id)
+    {
+        await _designationService.DeleteAsync(id);
+        return Ok(new ApiResponse<object>
+        {
+            Success = true,
+            Message = "Designation deleted successfully."
+        });
+    }
+
+    // ============================================================
+    // 22. MASTER DATA — GET ALL (Departments + Designations)
+    // ============================================================
+    [HttpGet("master-data/all")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> GetAllMasterData([FromQuery] bool includeInactive = false)
+    {
+        var departments = await _departmentService.GetAllAsync(includeInactive);
+        var designations = await _designationService.GetAllAsync(includeInactive);
+
+        // ✅ Professional DTO usage
+        var responseDto = new MasterDataResponseDto
+        {
+            Departments = departments,
+            Designations = designations
+        };
+
+        return Ok(new ApiResponse<MasterDataResponseDto>
+        {
+            Success = true,
+            Message = "",
+            Data = responseDto
+        });
+    }
+
+    // ============================================================
+    // 23. UPDATE EMPLOYEE PROFESSIONAL INFO
     // ============================================================
     [HttpPut("employees/{id:int}/professional")]
     [Authorize(Roles = "Admin")]
@@ -391,6 +492,23 @@ public class AdminController : ControllerBase
             Success = true,
             Message = "Employee professional information updated successfully.",
             Data = result
+        });
+    }
+
+    // ============================================================
+    // 24. ADMIN STATUS (public): landing page par Register dikhane ke liye
+    // ============================================================
+    [HttpGet("status")]
+    [AllowAnonymous]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    public async Task<IActionResult> GetAdminStatus()
+    {
+        var (adminExists, managerExists, employeeExists) = await _authService.GetRoleStatusAsync();
+        return Ok(new ApiResponse<object>
+        {
+            Success = true,
+            Message = "",
+            Data = new { adminExists, managerExists, employeeExists }
         });
     }
 }

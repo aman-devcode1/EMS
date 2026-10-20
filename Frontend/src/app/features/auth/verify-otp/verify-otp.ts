@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AdminService } from '../../../core/services/admin';
 import { ToastService } from '../../../core/services/toast';
@@ -11,8 +11,11 @@ import { TokenResponseDto } from '../../../core/models/token.model';
 import { OtpPurpose } from '../../../core/enums/otp-purpose';
 import { EmployeeService } from '../../../core/services/employee';
 import { AuthService } from '../../../core/services/auth';
+import { sanitizeOtp } from '../../../core/utils/otp.util';
+import { TokenService } from '../../../core/services/token';
 
 type OtpRole = 'Admin' | 'Manager' | 'Employee';
+type OtpMode = 'login' | 'register' | 'approval';
 
 @Component({
   selector: 'app-verify-otp',
@@ -21,15 +24,17 @@ type OtpRole = 'Admin' | 'Manager' | 'Employee';
   templateUrl: './verify-otp.html',
   styleUrl: './verify-otp.css',
 })
-export class VerifyOtp implements OnInit {
+export class VerifyOtp implements OnInit, OnDestroy {
   otpForm: FormGroup;
   email = '';
-  mode: 'login' | 'register' = 'login';
+  mode: OtpMode = 'login';
   role: OtpRole = 'Employee';
 
   isLoading = false;
   isResending = false;
   resendCooldown = 0;
+  private readonly RESEND_COOLDOWN_SECONDS = 60;
+  private cooldownTimer: ReturnType<typeof setInterval> | null = null;
 
   otpFieldName = `f_${Math.random().toString(36).substring(2)}`;
 
@@ -39,6 +44,7 @@ export class VerifyOtp implements OnInit {
     private authService: AuthService,
     private employeeService: EmployeeService,
     private toastService: ToastService,
+    private tokenService: TokenService,
     private router: Router,
     private route: ActivatedRoute,
   ) {
@@ -54,33 +60,48 @@ export class VerifyOtp implements OnInit {
       this.email = params['email'] || '';
 
       if (this.role === 'Employee') {
-        // Always 'register' mode for Employee
         this.mode = 'register';
       } else {
         const modeParam = params['mode'];
-        this.mode = modeParam === 'register' ? 'register' : 'login';
+        if (modeParam === 'approval') this.mode = 'approval';
+        else if (modeParam === 'register') this.mode = 'register';
+        else this.mode = 'login';
       }
 
       if (!this.email) {
         this.toastService.showError('Email is missing. Please start the process again.');
         const target = this.role === 'Employee' ? '/employee/login' : '/admin/login';
         this.router.navigate([target]);
+      } else {
+        // OTP abhi abhi bheja gaya hai: Resend ko pehle 60s band rakho
+        // (warna backend "Please wait N seconds" ka error deta hai)
+        this.startCooldown(this.RESEND_COOLDOWN_SECONDS);
       }
     });
   }
 
-  // Back navigation
   goBack(): void {
-    if (window.history.length > 1) {
-      window.history.back();
-    } else {
-      const target = this.role === 'Employee' ? '/employee/login' : '/admin/login';
-      this.router.navigate([target]);
+    if (this.mode === 'approval') {
+      sessionStorage.removeItem('pending_replace_admin_data');
+      this.router.navigate(['/admin/replace-admin']);
+      return;
     }
+
+    // Register mode (Admin role) - back to A's dashboard (beacuse B still not active and A still Admin)
+    if (this.mode === 'register' && this.role === 'Admin') {
+      this.router.navigate(['/admin/dashboard']);
+      return;
+    }
+
+    // Login mode / Emoloyee - back to login page
+    const target = this.role === 'Employee' ? '/employee/login' : '/admin/login';
+    this.router.navigate([target]);
   }
 
-  // Dynamic text — according to role/mode
   get brandMessage(): string {
+    if (this.mode === 'approval') {
+      return 'Confirm the approval code from your inbox to authorize the admin replacement.';
+    }
     if (this.role === 'Employee') {
       return 'One last step — confirm the code we emailed you to activate your record.';
     }
@@ -88,23 +109,23 @@ export class VerifyOtp implements OnInit {
   }
 
   get pageHeading(): string {
+    if (this.mode === 'approval') return 'Confirm approval';
     return this.role === 'Employee' ? 'Verify your email' : 'Verify one-time code';
   }
 
   get buttonText(): string {
     if (this.isLoading) return 'Verifying...';
+    if (this.mode === 'approval') return 'Confirm approval';
     return this.role === 'Employee' ? 'Verify and activate account' : 'Verify and continue';
   }
 
-  // Input cleanup
   onOtpInput(event: Event): void {
     const input = event.target as HTMLInputElement;
-    const value = input.value.replace(/\D/g, '').substring(0, 6);
+    const value = sanitizeOtp(input.value);
     input.value = value;
     this.otpForm.get('code')?.setValue(value, { emitEvent: false });
   }
 
-  // Verify OTP
   verifyOtp(): void {
     if (this.otpForm.invalid) {
       this.otpForm.markAllAsTouched();
@@ -116,27 +137,88 @@ export class VerifyOtp implements OnInit {
       return;
     }
 
-    const payload: VerifyOtpDto = {
-      email: this.email,
-      code: this.otpForm.value.code,
-    };
+    const code = this.otpForm.value.code as string;
+
+    // APPROVAL MODE
+    if (this.mode === 'approval') {
+      this.handleApprovalVerify(code);
+      return;
+    }
+
+    // NORMAL MODE
+    const payload: VerifyOtpDto = { email: this.email, code };
 
     this.isLoading = true;
     this.getVerifyRequest(payload).subscribe({
       next: (response) => {
         this.isLoading = false;
+        this.otpForm.reset();
         this.toastService.showSuccess(response.message);
 
-        this.authService.saveSession({
-          accessToken: response.data.accessToken,
-        });
+        if (this.mode === 'register') {
+          sessionStorage.setItem('isFirstLogin', 'true');
+        }
 
-        const target = this.role === 'Employee' ? '/employee/dashboard' : '/admin/dashboard';
+        this.authService.saveSession({ accessToken: response.data.accessToken });
+
+        const actualRole = this.tokenService.getUserRole();
+
+        let target = '/admin/dashboard';
+        if (actualRole === 'Manager') {
+          target = '/manager/dashboard';
+        } else if (actualRole === 'Employee') {
+          target = '/employee/dashboard';
+        }
+
         this.router.navigate([target]);
       },
       error: () => {
         this.isLoading = false;
-        // Error interceptor handles the toast
+      },
+    });
+  }
+
+  private handleApprovalVerify(code: string): void {
+    const raw = sessionStorage.getItem('pending_replace_admin_data');
+    if (!raw) {
+      this.toastService.showError(
+        'Your session has expired. Please start the replacement process again.'
+      );
+      this.router.navigate(['/admin/replace-admin']);
+      return;
+    }
+
+    let pendingData: any;
+    try {
+      pendingData = JSON.parse(raw);
+    } catch {
+      sessionStorage.removeItem('pending_replace_admin_data');
+      this.toastService.showError('Your saved form data could not be read. Please start the replacement again.');
+      this.router.navigate(['/admin/replace-admin']);
+      return;
+    }
+
+    const payload = { ...pendingData, approvalCode: code };
+
+    this.isLoading = true;
+    this.adminService.replaceAdmin(payload).subscribe({
+      next: (response) => {
+        this.isLoading = false;
+        this.otpForm.reset();
+        sessionStorage.removeItem('pending_replace_admin_data');
+        this.toastService.showSuccess(response.message);
+
+        if (response.data.nextAdminEmail) {
+          this.router.navigate(['/admin/verify-otp'], {
+            queryParams: {
+              email: response.data.nextAdminEmail,
+              mode: 'register',
+            },
+          });
+        }
+      },
+      error: () => {
+        this.isLoading = false;
       },
     });
   }
@@ -150,7 +232,6 @@ export class VerifyOtp implements OnInit {
       : this.adminService.verifyRegisterOtp(payload);
   }
 
-  // Resend OTP
   resendOtp(): void {
     if (this.resendCooldown > 0 || this.isResending) return;
 
@@ -159,6 +240,42 @@ export class VerifyOtp implements OnInit {
       return;
     }
 
+    // APPROVAL MODE — resend approval OTP
+    if (this.mode === 'approval') {
+      const raw = sessionStorage.getItem('pending_replace_admin_data');
+      if (!raw) {
+        this.toastService.showError('Session expired. Please start again.');
+        this.router.navigate(['/admin/replace-admin']);
+        return;
+      }
+
+      let pendingData: any;
+      try {
+        pendingData = JSON.parse(raw);
+      } catch {
+        sessionStorage.removeItem('pending_replace_admin_data');
+        this.toastService.showError('Your saved form data could not be read. Please start the replacement again.');
+        this.router.navigate(['/admin/replace-admin']);
+        return;
+      }
+
+      this.isResending = true;
+      this.adminService.replaceAdmin({ ...pendingData, approvalCode: undefined }).subscribe({
+        next: (res) => {
+          this.isResending = false;
+          this.otpForm.reset();
+          this.toastService.showSuccess(res.message);
+          this.startCooldown(this.RESEND_COOLDOWN_SECONDS);
+        },
+        error: () => {
+          this.isResending = false;
+          this.startCooldown(5);
+        },
+      });
+      return;
+    }
+
+    // NORMAL RESEND
     const purpose =
       this.role === 'Employee' || this.mode === 'register'
         ? OtpPurpose.Registration
@@ -170,8 +287,9 @@ export class VerifyOtp implements OnInit {
     this.getResendRequest(payload).subscribe({
       next: (res) => {
         this.isResending = false;
+        this.otpForm.reset();
         this.toastService.showSuccess(res.message);
-        this.startCooldown(30);
+        this.startCooldown(60);
       },
       error: () => {
         this.isResending = false;
@@ -188,10 +306,18 @@ export class VerifyOtp implements OnInit {
   }
 
   private startCooldown(seconds: number): void {
+    if (this.cooldownTimer) clearInterval(this.cooldownTimer);
     this.resendCooldown = seconds;
-    const interval = setInterval(() => {
+    this.cooldownTimer = setInterval(() => {
       this.resendCooldown--;
-      if (this.resendCooldown <= 0) clearInterval(interval);
+      if (this.resendCooldown <= 0 && this.cooldownTimer) {
+        clearInterval(this.cooldownTimer);
+        this.cooldownTimer = null;
+      }
     }, 1000);
+  }
+
+  ngOnDestroy(): void {
+    if (this.cooldownTimer) clearInterval(this.cooldownTimer);
   }
 }

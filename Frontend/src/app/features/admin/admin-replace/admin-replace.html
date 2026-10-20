@@ -5,8 +5,8 @@
     <div class="replace-brand__body">
       <h1>Replace admin</h1>
       <p>
-        Register a new administrator and hand over access.
-        This immediately signs you out.
+        Register a new administrator. You'll stay signed in as admin
+        until they verify the OTP sent to their email.
       </p>
     </div>
 
@@ -150,8 +150,8 @@
             Cancel
           </a>
 
-          <button type="submit" [disabled]="isLoading" class="btn btn-primary">
-            {{ isLoading ? 'Processing…' : 'Replace admin & sign out' }}
+          <button type="submit" [disabled]="isLoading || replaceForm.invalid" class="btn btn-primary">
+            {{ isLoading ? 'Processing…' : 'Register new admin & send OTP' }}
           </button>
         </div>
 

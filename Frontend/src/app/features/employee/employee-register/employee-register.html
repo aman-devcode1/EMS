@@ -15,6 +15,17 @@
 
   <main class="auth-panel">
     <div class="auth-panel__inner">
+
+      <!-- ✅ Back to Landing Page Link -->
+      <a routerLink="/" class="back-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round" style="width: 16px; height: 16px;">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        Back to portals
+      </a>
+
       <h2>Create your account</h2>
       <p class="auth-form__hint">
         We'll email a one-time code to activate it.
@@ -25,9 +36,9 @@
         <!-- First Name -->
         <div class="form-group">
           <label for="firstName">First name</label>
-          <input id="firstName" type="text" [name]="erFirstNameFieldName" formControlName="firstName" class="form-control"
-            [class.invalid]="isInvalid('firstName')" maxlength="100" autocomplete="off" novalidate readonly
-            onfocus="this.removeAttribute('readonly')" />
+          <input id="firstName" type="text" [name]="erFirstNameFieldName" formControlName="firstName"
+            class="form-control" [class.invalid]="isInvalid('firstName')" maxlength="100" autocomplete="off" novalidate
+            readonly onfocus="this.removeAttribute('readonly')" />
           <div class="field-error" *ngIf="isInvalid('firstName')">{{ getError('firstName') }}</div>
         </div>
 
@@ -53,9 +64,9 @@
         <div class="form-group">
           <label for="password">Password</label>
           <div class="password-wrapper">
-            <input id="password" [type]="showPassword ? 'text' : 'password'" [name]="erPasswordFieldName" formControlName="password"
-              class="form-control" [class.invalid]="isInvalid('password')" autocomplete="new-password" readonly
-              onfocus="this.removeAttribute('readonly')" />
+            <input id="password" [type]="showPassword ? 'text' : 'password'" [name]="erPasswordFieldName"
+              formControlName="password" class="form-control" [class.invalid]="isInvalid('password')"
+              autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly')" />
             <button type="button" class="password-toggle" (click)="togglePassword()"
               [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'">
               {{ showPassword ? 'Hide' : 'Show' }}
@@ -68,8 +79,8 @@
         <div class="form-group">
           <label for="confirmPassword">Confirm password</label>
           <div class="password-wrapper">
-            <input id="confirmPassword" [type]="showConfirmPassword ? 'text' : 'password'" [name]="erConfirmPasswordFieldName"
-              formControlName="confirmPassword" class="form-control"
+            <input id="confirmPassword" [type]="showConfirmPassword ? 'text' : 'password'"
+              [name]="erConfirmPasswordFieldName" formControlName="confirmPassword" class="form-control"
               [class.invalid]="isInvalid('confirmPassword') || (registerForm.get('confirmPassword')?.touched && registerForm.errors?.['passwordMismatch'])"
               autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly')" />
             <button type="button" class="password-toggle" (click)="toggleConfirmPassword()"
@@ -95,9 +106,9 @@
         <!-- Phone -->
         <div class="form-group">
           <label for="phoneNumber">Phone number</label>
-          <input id="phoneNumber" type="text" [name]="erPhoneFieldName" formControlName="phoneNumber" class="form-control"
-            [class.invalid]="isInvalid('phoneNumber')" placeholder="10-digit Indian number" inputmode="numeric"
-            maxlength="10" autocomplete="new-password" (input)="onPhoneInput($event)" readonly
+          <input id="phoneNumber" type="text" [name]="erPhoneFieldName" formControlName="phoneNumber"
+            class="form-control" [class.invalid]="isInvalid('phoneNumber')" placeholder="10-digit Indian number"
+            inputmode="numeric" maxlength="10" autocomplete="new-password" (input)="onPhoneInput($event)" readonly
             onfocus="this.removeAttribute('readonly')" />
           <div class="field-error" *ngIf="isInvalid('phoneNumber')">{{ getError('phoneNumber') }}</div>
         </div>
@@ -106,8 +117,8 @@
         <div class="form-group">
           <label for="dateOfBirth">Date of birth</label>
           <input id="dateOfBirth" type="text" [name]="erDobFieldName" formControlName="dateOfBirth" class="form-control"
-            [class.invalid]="isInvalid('dateOfBirth')" placeholder="DD-MM-YYYY" maxlength="10"
-            inputmode="numeric" autocomplete="off" novalidate (input)="onDobInput($event)" readonly
+            [class.invalid]="isInvalid('dateOfBirth')" placeholder="DD-MM-YYYY" maxlength="10" inputmode="numeric"
+            autocomplete="off" novalidate (input)="onDobInput($event)" readonly
             onfocus="this.removeAttribute('readonly')" />
           <div class="field-error" *ngIf="isInvalid('dateOfBirth')">{{ getError('dateOfBirth') }}</div>
         </div>
@@ -115,18 +126,18 @@
         <!-- Address -->
         <div class="form-group">
           <label for="presentAddress">Present address <span class="optional-tag">(Optional)</span></label>
-          <input id="presentAddress" type="text" [name]="erAddressFieldName" formControlName="presentAddress" class="form-control"
-            [class.invalid]="isInvalid('presentAddress')" maxlength="500" autocomplete="off" novalidate readonly
-            onfocus="this.removeAttribute('readonly')" />
+          <input id="presentAddress" type="text" [name]="erAddressFieldName" formControlName="presentAddress"
+            class="form-control" [class.invalid]="isInvalid('presentAddress')" maxlength="500" autocomplete="off"
+            novalidate readonly onfocus="this.removeAttribute('readonly')" />
           <div class="field-error" *ngIf="isInvalid('presentAddress')">{{ getError('presentAddress') }}</div>
         </div>
 
         <!-- Previous Role -->
         <div class="form-group">
           <label for="previousCompanyRole">Previous company role <span class="optional-tag">(Optional)</span></label>
-          <input id="previousCompanyRole" type="text" [name]="erPrevRoleFieldName" formControlName="previousCompanyRole" class="form-control"
-            [class.invalid]="isInvalid('previousCompanyRole')" maxlength="200" autocomplete="off" novalidate readonly
-            onfocus="this.removeAttribute('readonly')" />
+          <input id="previousCompanyRole" type="text" [name]="erPrevRoleFieldName" formControlName="previousCompanyRole"
+            class="form-control" [class.invalid]="isInvalid('previousCompanyRole')" maxlength="200" autocomplete="off"
+            novalidate readonly onfocus="this.removeAttribute('readonly')" />
           <div class="field-error" *ngIf="isInvalid('previousCompanyRole')">{{ getError('previousCompanyRole') }}</div>
         </div>
 
@@ -138,7 +149,6 @@
 
       <p class="auth-form__switch">
         Already have an account? <a routerLink="/employee/login">Sign in</a><br />
-        Not an employee? <a routerLink="/admin/register">Register here as admin</a>
       </p>
 
     </div>

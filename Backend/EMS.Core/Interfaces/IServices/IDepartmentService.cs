@@ -9,4 +9,5 @@ public interface IDepartmentService
     Task<DepartmentDto> CreateAsync(CreateUpdateDepartmentDto dto);
     Task<DepartmentDto> UpdateAsync(int id, CreateUpdateDepartmentDto dto);
     Task<DepartmentDto> ToggleActiveAsync(int id);
+    Task DeleteAsync(int id);
 }

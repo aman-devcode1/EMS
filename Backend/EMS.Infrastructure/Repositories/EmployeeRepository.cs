@@ -1,6 +1,7 @@
 using EMS.Core.Common;
 using EMS.Core.DTOs.Employee;
 using EMS.Core.Entities;
+using EMS.Core.Enums;
 using EMS.Core.Interfaces.IRepositories;
 using EMS.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -51,6 +52,16 @@ public class EmployeeRepository : IEmployeeRepository
     }
 
     // ============================================================
+    // 2c. GET BY PHONE NUMBER (duplicate phone check)
+    // ============================================================
+    public async Task<Employee?> GetByPhoneNumberAsync(string phoneNumber)
+    {
+        return await _context.Employees
+            .Include(e => e.User)
+            .FirstOrDefaultAsync(e => e.PhoneNumber == phoneNumber);
+    }
+
+    // ============================================================
     // 3. ADD
     // ============================================================
     public async Task AddAsync(Employee employee)
@@ -96,6 +107,7 @@ public class EmployeeRepository : IEmployeeRepository
         .Include(e => e.User)
         .Include(e => e.Department)
         .Include(e => e.Designation)
+        .Where(e => e.User == null || e.User.Role != RoleType.Admin)
         .AsQueryable();
 
         // Search
@@ -142,5 +154,28 @@ public class EmployeeRepository : IEmployeeRepository
             TotalPages = (int)Math.Ceiling(totalRecords / (double)queryParams.PageSize),
             Items = items
         };
+    }
+
+    public async Task<bool> ExistsByDepartmentIdAsync(int departmentId)
+    {
+        return await _context.Employees.AnyAsync(e => e.DepartmentId == departmentId);
+    }
+
+    public async Task<List<int>> GetAssignedDepartmentIdsAsync()
+    {
+        return await _context.Employees
+            .Where(e => e.DepartmentId.HasValue)
+            .Select(e => e.DepartmentId.Value)
+            .Distinct()
+            .ToListAsync();
+    }
+
+    public async Task<List<int>> GetAssignedDesignationIdsAsync()
+    {
+        return await _context.Employees
+            .Where(e => e.DesignationId.HasValue)
+            .Select(e => e.DesignationId.Value)
+            .Distinct()
+            .ToListAsync();
     }
 }
